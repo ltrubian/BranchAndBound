@@ -4,3 +4,6 @@ main
 **/cmake_install.cmake
 **/Makefile
 **/*.a
+.cache/
+compile_commands.json
+**/*.kate*

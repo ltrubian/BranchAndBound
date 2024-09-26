@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(Branch_and_Bound)
 set(CMAKE_CXX_FLAGS "-O3 -std=c++11")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(my_libs)
 

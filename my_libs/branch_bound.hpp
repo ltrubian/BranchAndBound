@@ -4,8 +4,8 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <vector>
 #include <valarray>
+#include <vector>
 
 struct OptimalSolution {
   bool success;
@@ -29,27 +29,27 @@ struct Bounds {
 
   Bounds() : lower{std::valarray<float>()}, upper{std::valarray<float>()} {};
   Bounds(std::size_t n, float low, float up)
-      : lower{std::valarray<float>(low, n)}, upper{std::valarray<float>(up, n)} {
-  };
+      : lower{std::valarray<float>(low, n)},
+        upper{std::valarray<float>(up, n)} {};
   Bounds(std::size_t n)
-  : Bounds(n, -std::numeric_limits<float>::infinity(),
-           std::numeric_limits<float>::infinity()){};
+      : Bounds(n, -std::numeric_limits<float>::infinity(),
+               std::numeric_limits<float>::infinity()){};
 
   float &operator()(std::size_t idx, BoundType btype) {
     switch (btype) {
-      case BoundType::lower:
-        return lower[idx];
-      case BoundType::upper:
-        return upper[idx];
+    case BoundType::lower:
+      return lower[idx];
+    case BoundType::upper:
+      return upper[idx];
     }
   };
 
   const float &operator()(std::size_t idx, BoundType btype) const {
     switch (btype) {
-      case BoundType::lower:
-        return lower[idx];
-      case BoundType::upper:
-        return upper[idx];
+    case BoundType::lower:
+      return lower[idx];
+    case BoundType::upper:
+      return upper[idx];
     }
   };
 };

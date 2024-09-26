@@ -6,18 +6,17 @@
 #include <list>
 #include <vector>
 
-std::ostream& operator<<(std::ostream& os, const Bounds& b) {
-  for(const auto& x: b.lower){
+std::ostream &operator<<(std::ostream &os, const Bounds &b) {
+  for (const auto &x : b.lower) {
     os << x << "\t";
   }
   os << "\n";
-  for(const auto& x: b.upper){
+  for (const auto &x : b.upper) {
     os << x << "\t";
   }
   os << std::endl;
   return os;
 };
-
 
 template <typename T> OptimalSolution branch_bound(const T &problem) {
   OptimalSolution opt_sol;

@@ -4,6 +4,9 @@
 #include "branch_bound.hpp"
 #include <valarray>
 
+/**
+ * My class of the Knapsack problem
+ */
 struct Knapsack {
   std::valarray<float> prices;
   std::valarray<float> weights;
