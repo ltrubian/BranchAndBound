@@ -56,6 +56,9 @@ struct Bounds {
 
 std::ostream &operator<<(std::ostream &os, const Bounds &b);
 
+/**
+ * T: Bounds bounds
+ */
 template <typename T> OptimalSolution branch_bound(const T &problem);
 
 #endif // __BRANCH_AND_BOUND

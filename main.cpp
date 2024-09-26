@@ -26,6 +26,15 @@ int main() {
   current_bounds(index, BoundType::lower) = 3 + 1.0;
   std::cout << new_bounds;
   std::cout << current_bounds;
+  std::valarray<std::size_t> in{3, 4, 0, 7};
+  std::valarray<int> l{-1, 1, 2, 3, 4, 5, 6, 7};
+  std::valarray<std::size_t> rep{in[std::slice(0, 2, 1)]};
+  for (auto &x : rep)
+    std::cout << x << "\t";
+  std::cout << std::endl;
+  for (auto &x : in)
+    std::cout << x << "\t";
+  std::cout << std::endl;
 
   return 0;
 }

@@ -1,9 +1,10 @@
 #include "knapsacks.hpp"
 #include "branch_bound.hpp"
+#include <algorithm>
 #include <numeric>
+#include <tuple>
 #include <utility>
 #include <valarray>
-#include <algorithm>
 
 const OptimalSolution Knapsack::solve(const Bounds &bounds) const {
   OptimalSolution opt_sol{};
@@ -14,7 +15,7 @@ const OptimalSolution Knapsack::solve(const Bounds &bounds) const {
   // if the items the bounds make me take are too much => infeasible bounds
   if (correct_capacity < 0)
     return opt_sol;
-  std::valarray<float> real_prices{this->prices * bounds.upper *
+  std::valarray<float> real_prices{this->prices / this->weights * bounds.upper *
                                    (1.0f - bounds.lower)};
   long int items_takable{
       std::count(std::begin(real_prices), std::end(real_prices), 0.0f)};
@@ -24,9 +25,17 @@ const OptimalSolution Knapsack::solve(const Bounds &bounds) const {
     opt_sol.solution = bounds.lower;
     return opt_sol;
   }
-  std::valarray<std::size_t> indexes{real_prices.size()};
-  std::iota(std::begin(indexes), std::end(indexes), 0);
-  std::sort(std::begin(indexes), std::end(indexes), [&](std::size_t x, std::size_t y) {return real_prices[x] > real_prices[y];});
+  std::valarray<std::pair<float, std::size_t>> indexes{real_prices.size()};
+  std::generate(std::begin(indexes), std::end(indexes), [&]() {
+    static int ind{-1};
+    ++ind;
+    return std::pair<float, std::size_t>(real_prices[ind], ind);
+  });
+  std::sort(
+      std::begin(indexes), std::end(indexes),
+      [&](std::tuple<float, std::size_t> x, std::tuple<float, std::size_t> y) {
+        return std::get<0>(x) >= std::get<0>(y);
+      });
 
   return opt_sol;
 }
