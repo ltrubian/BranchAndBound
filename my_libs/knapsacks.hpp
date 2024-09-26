@@ -2,17 +2,17 @@
 #define __KNAPSACKS__
 
 #include "branch_bound.hpp"
-#include <vector>
+#include <valarray>
 
 struct Knapsack {
-  std::vector<int> prices;
-  std::vector<int> weights;
+  std::valarray<float> prices;
+  std::valarray<float> weights;
   float capacity;
   Bounds bounds;
 
-  const OptimalSolution solve(Bounds &bounds) const;
+  const OptimalSolution solve(const Bounds &bounds) const;
 
-  const float objective(const std::vector<float> &solution) const;
+  const float objective(const std::valarray<float> &solution) const;
 };
 
 #endif // __KNAPSACKS__

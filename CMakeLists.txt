@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 project(Branch_and_Bound)
-set(CMAKE_CXX_FLAGS "-O3")
+set(CMAKE_CXX_FLAGS "-O3 -std=c++11")
 
 add_subdirectory(my_libs)
 
@@ -18,4 +18,8 @@ add_custom_target(format
     COMMAND clang-format
     -i
     ${ALL_SOURCE_FILES}
+)
+add_custom_target(cmake-refresh
+    COMMAND rm  CMakeCache.txt
+    COMMAND cmake .
 )

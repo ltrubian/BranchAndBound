@@ -11,11 +11,11 @@ struct OptimalSolution {
   bool success;
   std::size_t nodes;
   float value;
-  std::vector<float> solution;
+  std::valarray<float> solution;
 
   OptimalSolution()
       : success{false}, nodes{0}, value{std::numeric_limits<float>::infinity()},
-        solution{std::vector<float>()} {};
+        solution{std::valarray<float>()} {};
 };
 
 enum BoundType {
@@ -24,12 +24,12 @@ enum BoundType {
 };
 
 struct Bounds {
-  std::valarray<float> low_bounds;
-  std::valarray<float> up_bounds;
+  std::valarray<float> lower;
+  std::valarray<float> upper;
 
-  Bounds() : low_bounds{std::valarray<float>()}, up_bounds{std::valarray<float>()} {};
+  Bounds() : lower{std::valarray<float>()}, upper{std::valarray<float>()} {};
   Bounds(std::size_t n, float low, float up)
-      : low_bounds{std::valarray<float>(low, n)}, up_bounds{std::valarray<float>(up, n)} {
+      : lower{std::valarray<float>(low, n)}, upper{std::valarray<float>(up, n)} {
   };
   Bounds(std::size_t n)
   : Bounds(n, -std::numeric_limits<float>::infinity(),
@@ -38,18 +38,18 @@ struct Bounds {
   float &operator()(std::size_t idx, BoundType btype) {
     switch (btype) {
       case BoundType::lower:
-        return low_bounds[idx];
+        return lower[idx];
       case BoundType::upper:
-        return up_bounds[idx];
+        return upper[idx];
     }
   };
 
   const float &operator()(std::size_t idx, BoundType btype) const {
     switch (btype) {
       case BoundType::lower:
-        return low_bounds[idx];
+        return lower[idx];
       case BoundType::upper:
-        return up_bounds[idx];
+        return upper[idx];
     }
   };
 };
