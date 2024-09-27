@@ -6,13 +6,21 @@
 #include <utility>
 #include <valarray>
 
-const OptimalSolution KnapsackHighs::solve(const Bounds &bounds) const {
+const OptimalSolution KnapsackHighs::solve_relaxed(const Bounds &bounds) const {
   OptimalSolution opt_sol{};
-
-  opt_sol.success = true;
   return opt_sol;
 }
 
+const OptimalSolution KnapsackHighs::solve_integer(const Bounds &bounds) const {
+  OptimalSolution opt_sol{};
+  return opt_sol;
+}
+
+const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
+                                                  bool integrality) const {
+  OptimalSolution opt_sol{};
+  return opt_sol;
+}
 const float
 KnapsackHighs::objective(const std::valarray<float> &solution) const {
   float res{0.0};

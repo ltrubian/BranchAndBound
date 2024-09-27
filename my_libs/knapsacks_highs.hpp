@@ -13,7 +13,22 @@ struct KnapsackHighs {
   float capacity;
   Bounds bounds;
 
-  const OptimalSolution solve(const Bounds &bounds) const;
+  /**
+   * This method is called in the branch_bound template function.
+   * No integrality constrains are guaranteed
+   */
+  const OptimalSolution solve_relaxed(const Bounds &bounds) const;
+
+  /**
+   * This method solve the problem with integrality constrains enforced
+   */
+  const OptimalSolution solve_integer(const Bounds &bounds) const;
+
+  /**
+   * This is an helper method:  the interface with the HiGHS library
+   */
+  const OptimalSolution highs_solver(const Bounds &bounds,
+                                     bool integrality) const;
 
   const float objective(const std::valarray<float> &solution) const;
 };

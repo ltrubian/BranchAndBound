@@ -29,8 +29,8 @@ struct Bounds {
 
   Bounds() : lower{std::valarray<float>()}, upper{std::valarray<float>()} {};
   Bounds(std::size_t n, float low, float up)
-      : lower{std::valarray<float>(low, n)},
-        upper{std::valarray<float>(up, n)} {};
+      : lower{std::valarray<float>(low, n)}, upper{std::valarray<float>(up,
+                                                                        n)} {};
   Bounds(std::size_t n)
       : Bounds(n, -std::numeric_limits<float>::infinity(),
                std::numeric_limits<float>::infinity()){};

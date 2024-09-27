@@ -6,7 +6,7 @@ target_sources(branch_lib PUBLIC branch_bound.hpp)
 target_sources(knapsack_lib PUBLIC knapsacks.hpp)
 target_sources(knapsack_highs_lib PUBLIC knapsacks_highs.hpp)
 
-#set(HIGHS_DIR /usr/local/lib/cmake/highs)
+set(HIGHS_DIR /usr/local/lib/cmake/highs)
 find_package(HIGHS REQUIRED)
 find_package(Threads REQUIRED)
 target_link_libraries(knapsack_highs_lib  highs::highs)
