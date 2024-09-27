@@ -22,7 +22,8 @@ const OptimalSolution Knapsack::solve(const Bounds &bounds) const {
       std::count(std::begin(real_prices), std::end(real_prices), 0.0f)};
   // if there are no other items to take but the ones I must => the solution is
   // the item I must take
-  opt_sol.solution = bounds.lower; // and the lower bounds are the "starting" optimal solution
+  opt_sol.solution =
+      bounds.lower; // and the lower bounds are the "starting" optimal solution
   if (items_takable == 0) {
     return opt_sol;
   }
@@ -42,7 +43,6 @@ const OptimalSolution Knapsack::solve(const Bounds &bounds) const {
     opt_sol.solution[*ind] = 1.0f;
   }
   opt_sol.success = true;
-
 
   return opt_sol;
 }
