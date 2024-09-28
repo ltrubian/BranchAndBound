@@ -1,6 +1,5 @@
 #include "knapsacks_highs.hpp"
 #include "Highs.h"
-#include "branch_bound.hpp"
 #include <algorithm>
 #include <lp_data/HConst.h>
 #include <lp_data/HStruct.h>
@@ -34,8 +33,8 @@ const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
   // integrality ?
   if (integrality) {
     problem.lp_.integrality_.resize(problem.lp_.num_col_);
-    for (auto &variable : problem.lp_.integrality_)
-      variable = HighsVarType::kInteger;
+    std::fill(problem.lp_.integrality_.begin(), problem.lp_.integrality_.end(),
+              HighsVarType::kInteger);
   }
   // solve
   Highs highs;

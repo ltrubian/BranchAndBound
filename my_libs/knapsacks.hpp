@@ -1,9 +1,9 @@
 #ifndef __KNAPSACKS__
 #define __KNAPSACKS__
 
-#include <valarray>
 #include <limits>
 #include <ostream>
+#include <valarray>
 
 struct OptimalSolution {
   bool success;
@@ -29,13 +29,12 @@ struct Bounds {
   Bounds(std::size_t n, float low, float up)
       : lower{std::valarray<float>(low, n)}, upper{std::valarray<float>(up,
                                                                         n)} {};
-  Bounds(std::size_t n)
+  explicit Bounds(std::size_t n)
       : Bounds(n, -std::numeric_limits<float>::infinity(),
                std::numeric_limits<float>::infinity()){};
 };
 
 std::ostream &operator<<(std::ostream &os, const Bounds &b);
-
 
 /**
  * My class of the Knapsack problem
@@ -49,7 +48,7 @@ struct Knapsack {
 
   const float objective(const std::valarray<float> &solution) const;
 
-  const OptimalSolution branch_bound(Bounds& bounds) const ;
+  const OptimalSolution branch_bound(Bounds &bounds) const;
 };
 
 #endif // __KNAPSACKS__

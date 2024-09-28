@@ -8,11 +8,7 @@
 /**
  * Class of the Knapsack problem, interface for HiGHS
  */
-struct KnapsackHighs :Knapsack{
-  std::valarray<float> prices;
-  std::valarray<float> weights;
-  float capacity;
-  Bounds bounds;
+struct KnapsackHighs : Knapsack {
   HighsModel problem;
 
   /**
@@ -20,9 +16,7 @@ struct KnapsackHighs :Knapsack{
    * No integrality constrains are guaranteed
    */
   const OptimalSolution solve_relaxed(const Bounds &bounds) const {
-    //return this->highs_solver(bounds, false);
-    std::cout << "solver from Highs" << std::endl;
-    return OptimalSolution();
+    return this->highs_solver(bounds, false);
   };
 
   /**

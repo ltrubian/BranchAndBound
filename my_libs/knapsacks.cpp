@@ -1,11 +1,11 @@
 #include "knapsacks.hpp"
 #include <algorithm>
 #include <cstddef>
+#include <forward_list>
 #include <numeric>
 #include <tuple>
 #include <utility>
 #include <valarray>
-#include <forward_list>
 
 const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   OptimalSolution opt_sol{};
@@ -70,7 +70,7 @@ std::ostream &operator<<(std::ostream &os, const Bounds &b) {
   return os;
 };
 
-const OptimalSolution Knapsack::branch_bound( Bounds &bounds) const {
+const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
   OptimalSolution opt_sol;
   float best_value{std::numeric_limits<float>::infinity()};
 
@@ -110,13 +110,12 @@ const OptimalSolution Knapsack::branch_bound( Bounds &bounds) const {
 
     Bounds new_bounds{current_bounds};
 
-    new_bounds.upper = integral;
+    new_bounds.upper[index] = integral;
     active_problems.emplace_front(new_bounds);
 
-    current_bounds.lower = integral + 1.0;
+    current_bounds.lower[index] = integral + 1.0;
     active_problems.emplace_front(current_bounds);
   }
   opt_sol.success = true;
   return opt_sol;
 }
-
