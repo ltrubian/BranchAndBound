@@ -1,4 +1,5 @@
-#include "branch_bound.hpp"
+#include "knapsacks.hpp"
+#include "knapsacks_highs.hpp"
 #include <forward_list>
 #include <iostream>
 #include <limits>
@@ -21,9 +22,9 @@ int main() {
   std::cout << current_bounds;
   Bounds new_bounds{current_bounds};
   std::cout << new_bounds;
-  new_bounds(index, BoundType::upper) = 3;
+  new_bounds.upper[index] = 3;
   std::cout << new_bounds;
-  current_bounds(index, BoundType::lower) = 3 + 1.0;
+  current_bounds.lower[index] = 3 + 1.0;
   std::cout << new_bounds;
   std::cout << current_bounds;
   std::valarray<std::size_t> in{3, 4, 0, 7};
@@ -35,6 +36,8 @@ int main() {
   for (auto &x : in)
     std::cout << x << "\t";
   std::cout << std::endl;
+  KnapsackHighs lol;
+  lol.solve_relaxed(new_bounds);
 
   return 0;
 }

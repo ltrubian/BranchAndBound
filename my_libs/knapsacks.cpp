@@ -1,11 +1,11 @@
 #include "knapsacks.hpp"
-#include "branch_bound.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <numeric>
 #include <tuple>
 #include <utility>
 #include <valarray>
+#include <forward_list>
 
 const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   OptimalSolution opt_sol{};
@@ -58,16 +58,65 @@ const float Knapsack::objective(const std::valarray<float> &solution) const {
   return -res;
 }
 
-/*
-  std::valarray<std::pair<float, std::size_t>> indexes{real_prices.size()};
-  std::generate(std::begin(indexes), std::end(indexes), [&]() {
-    static int ind{-1};
-    ++ind;
-    return std::pair<float, std::size_t>(real_prices[ind], ind);
-  });
-  std::sort(
-      std::begin(indexes), std::end(indexes),
-      [&](std::tuple<float, std::size_t> x, std::tuple<float, std::size_t> y) {
-        return std::get<0>(x) >= std::get<0>(y);
-      });
-*/
+std::ostream &operator<<(std::ostream &os, const Bounds &b) {
+  for (const auto &x : b.lower) {
+    os << x << "\t";
+  }
+  os << "\n";
+  for (const auto &x : b.upper) {
+    os << x << "\t";
+  }
+  os << std::endl;
+  return os;
+};
+
+const OptimalSolution Knapsack::branch_bound( Bounds &bounds) const {
+  OptimalSolution opt_sol;
+  float best_value{std::numeric_limits<float>::infinity()};
+
+  std::forward_list<Bounds> active_problems;
+  active_problems.emplace_front(bounds);
+
+  for (; !active_problems.empty(); active_problems.pop_front()) {
+    ++opt_sol.nodes;
+    Bounds current_bounds{active_problems.front()};
+
+    OptimalSolution current_sol{this->solve_relaxed(current_bounds)};
+
+    if (!current_sol.success or
+        best_value < this->objective(current_sol.solution)) {
+      continue;
+    }
+
+    float fractional{0.0};
+    float integral;
+    auto index{0};
+    for (auto &x : current_sol.solution) {
+      integral = std::modf(x, &fractional);
+      if (fractional != 0.0) {
+        index = &x - &current_sol.solution[0];
+        break;
+      }
+    }
+
+    if (fractional == 0.0) {
+      float new_value{this->objective(current_sol.solution)};
+      if (new_value < best_value) {
+        best_value = new_value;
+        opt_sol.solution = current_sol.solution;
+      }
+      continue;
+    }
+
+    Bounds new_bounds{current_bounds};
+
+    new_bounds.upper = integral;
+    active_problems.emplace_front(new_bounds);
+
+    current_bounds.lower = integral + 1.0;
+    active_problems.emplace_front(current_bounds);
+  }
+  opt_sol.success = true;
+  return opt_sol;
+}
+

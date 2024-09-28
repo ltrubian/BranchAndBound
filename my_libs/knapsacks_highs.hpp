@@ -2,13 +2,13 @@
 #define __KNAPSACKS__HIGHS__
 
 #include "Highs.h"
-#include "branch_bound.hpp"
+#include "knapsacks.hpp"
 #include <valarray>
 
 /**
  * Class of the Knapsack problem, interface for HiGHS
  */
-struct KnapsackHighs {
+struct KnapsackHighs :Knapsack{
   std::valarray<float> prices;
   std::valarray<float> weights;
   float capacity;
@@ -20,7 +20,9 @@ struct KnapsackHighs {
    * No integrality constrains are guaranteed
    */
   const OptimalSolution solve_relaxed(const Bounds &bounds) const {
-    return this->highs_solver(bounds, false);
+    //return this->highs_solver(bounds, false);
+    std::cout << "solver from Highs" << std::endl;
+    return OptimalSolution();
   };
 
   /**

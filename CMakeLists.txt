@@ -10,7 +10,6 @@ add_subdirectory(my_libs)
 
 add_executable(main main.cpp)
 
-target_link_libraries(main PUBLIC branch_lib)
 target_link_libraries(main PUBLIC knapsack_lib)
 target_link_libraries(main PUBLIC knapsack_highs_lib)
 target_include_directories(main PUBLIC
