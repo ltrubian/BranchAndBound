@@ -1,5 +1,4 @@
 #include "knapsacks.hpp"
-#include "knapsacks_highs.hpp"
 #include <forward_list>
 #include <iostream>
 #include <limits>
@@ -36,8 +35,7 @@ int main() {
   for (auto &x : in)
     std::cout << x << "\t";
   std::cout << std::endl;
-  KnapsackHighs lol;
-  lol.solve_relaxed(new_bounds);
+
 
   return 0;
 }

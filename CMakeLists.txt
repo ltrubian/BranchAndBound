@@ -3,8 +3,6 @@ project(Branch_and_Bound)
 set(CMAKE_CXX_FLAGS "-O3 -std=c++11")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-include(CMakePrintHelpers)
-cmake_print_variables(CMAKE_INSTALL_PREFIX)
 
 add_subdirectory(my_libs)
 
@@ -16,6 +14,11 @@ target_include_directories(main PUBLIC
 		"${PROJECT_SOURCE_DIR}/my_libs")
 
 
+set(HIGHS_DIR /usr/local/lib/cmake/highs)
+find_package(HIGHS REQUIRED)
+find_package(Threads REQUIRED)
+
+target_link_libraries(knapsack_highs_lib  highs::highs)
 
 		
 file(GLOB_RECURSE ALL_SOURCE_FILES
