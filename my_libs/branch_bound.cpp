@@ -29,7 +29,7 @@ template <typename T> OptimalSolution branch_bound(const T &problem) {
     ++opt_sol.nodes;
     Bounds current_bounds{active_problems.front()};
 
-    OptimalSolution current_sol{problem.solve(current_bounds)};
+    OptimalSolution current_sol{problem.solve_relaxed(current_bounds)};
 
     if (!current_sol.success or
         best_value < problem.objective(current_sol.solution)) {

@@ -1,9 +1,9 @@
 #ifndef __KNAPSACKS__HIGHS__
 #define __KNAPSACKS__HIGHS__
 
+#include "Highs.h"
 #include "branch_bound.hpp"
 #include <valarray>
-#include "Highs.h"
 
 /**
  * Class of the Knapsack problem, interface for HiGHS
@@ -20,14 +20,14 @@ struct KnapsackHighs {
    * No integrality constrains are guaranteed
    */
   const OptimalSolution solve_relaxed(const Bounds &bounds) const {
-    return this->highs_solver(bounds, false );
+    return this->highs_solver(bounds, false);
   };
 
   /**
    * This method solve the problem with integrality constrains enforced
    */
-  const OptimalSolution solve_integer(const Bounds &bounds) const{
-    return this->highs_solver(bounds, true );
+  const OptimalSolution solve_integer(const Bounds &bounds) const {
+    return this->highs_solver(bounds, true);
   }
 
   /**

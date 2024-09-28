@@ -13,7 +13,7 @@ struct Knapsack {
   float capacity;
   Bounds bounds;
 
-  const OptimalSolution solve(const Bounds &bounds) const;
+  const OptimalSolution solve_relaxed(const Bounds &bounds) const;
 
   const float objective(const std::valarray<float> &solution) const;
 };

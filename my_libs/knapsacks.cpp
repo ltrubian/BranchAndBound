@@ -7,7 +7,7 @@
 #include <utility>
 #include <valarray>
 
-const OptimalSolution Knapsack::solve(const Bounds &bounds) const {
+const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   OptimalSolution opt_sol{};
   float correct_capacity{this->capacity -
                          std::inner_product(std::begin(bounds.lower),
