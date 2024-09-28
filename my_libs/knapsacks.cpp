@@ -2,10 +2,27 @@
 #include <algorithm>
 #include <cstddef>
 #include <forward_list>
+#include <iterator>
 #include <numeric>
 #include <tuple>
 #include <utility>
 #include <valarray>
+#include <random>
+
+Knapsack::Knapsack(std::size_t v, float m, std::size_t n, std::size_t seed) {
+  std::mt19937 gen(seed);
+  std::uniform_real_distribution<float> dis(1.0f, 1000.0f);
+  std::valarray<float> small_w(v), small_p(n);
+  std::generate(std::begin(small_w), std::end(small_w),[&] () {return dis(gen);} );
+  for(auto i{0}; i < v; ++i){
+    std::uniform_real_distribution<float> dis(small_w[i] + 95.0f, small_w[i] + 105.0f);
+    small_p[i] = dis(gen);
+  }
+  small_p /= (m+1);
+  small_w /= (m+1);
+
+
+};
 
 const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   OptimalSolution opt_sol{};

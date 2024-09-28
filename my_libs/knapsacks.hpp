@@ -1,6 +1,7 @@
 #ifndef __KNAPSACKS__
 #define __KNAPSACKS__
 
+#include <cstddef>
 #include <limits>
 #include <ostream>
 #include <valarray>
@@ -43,6 +44,8 @@ struct Knapsack {
   std::valarray<float> prices;
   std::valarray<float> weights;
   float capacity;
+
+  explicit Knapsack(std::size_t v, float m, std::size_t n, std::size_t seed);
 
   const OptimalSolution solve_relaxed(const Bounds &bounds) const;
 
