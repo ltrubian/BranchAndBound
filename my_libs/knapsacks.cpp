@@ -1,34 +1,49 @@
 #include "knapsacks.hpp"
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <forward_list>
 #include <iterator>
 #include <numeric>
+#include <random>
 #include <tuple>
 #include <utility>
 #include <valarray>
-#include <random>
 
-Knapsack::Knapsack(std::size_t v, float m, std::size_t n, std::size_t seed) {
-  std::mt19937 gen(seed);
+Knapsack::Knapsack(std::size_t v, float m, std::size_t n, std::size_t seed)
+    : Knapsack{n} {
+  // pairs generation
+  std::mt19937_64 gen(seed);
   std::uniform_real_distribution<float> dis(1.0f, 1000.0f);
   std::valarray<float> small_w(v), small_p(n);
-  std::generate(std::begin(small_w), std::end(small_w),[&] () {return dis(gen);} );
-  for(auto i{0}; i < v; ++i){
-    std::uniform_real_distribution<float> dis(small_w[i] + 95.0f, small_w[i] + 105.0f);
+  std::generate(std::begin(small_w), std::end(small_w),
+                [&]() { return dis(gen); });
+  for (auto i{0ul}; i < v; ++i) {
+    std::uniform_real_distribution<float> dis(small_w[i] + 95.0f,
+                                              small_w[i] + 105.0f);
     small_p[i] = dis(gen);
   }
-  small_p /= (m+1);
-  small_w /= (m+1);
-
-
+  // pair normalization
+  small_p /= (m + 1);
+  small_w /= (m + 1);
+  // items generation
+  std::uniform_real_distribution<float> multiplier(1.f, m);
+  std::uniform_int_distribution<std::size_t> choice(0, v - 1);
+  for (auto i{0ul}; i < n; ++i) {
+    std::size_t pair{choice(gen)};
+    float mult{multiplier(gen)};
+    this->prices[i] = std::ceil(small_p[pair] * mult);
+    this->weights[i] = std::ceil(small_w[pair] * mult);
+  }
+  // set capacity
+  this->capacity = std::ceil(this->weights.sum() / 3);
 };
 
 const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   OptimalSolution opt_sol{};
   float correct_capacity{this->capacity -
                          std::inner_product(std::begin(bounds.lower),
-                                            std::end(bounds.upper),
+                                            std::end(bounds.lower),
                                             std::begin(this->weights), 0.0f)};
   // if the items the bounds make me take are too much => infeasible bounds
   if (correct_capacity < 0)
@@ -42,6 +57,7 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   opt_sol.solution =
       bounds.lower; // and the lower bounds are the "starting" optimal solution
   if (items_takable == 0) {
+    opt_sol.success = true;
     return opt_sol;
   }
   std::valarray<std::size_t> indexes(real_prices.size());

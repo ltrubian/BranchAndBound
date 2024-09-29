@@ -36,6 +36,5 @@ int main() {
     std::cout << x << "\t";
   std::cout << std::endl;
 
-
   return 0;
 }

@@ -44,6 +44,9 @@ struct Knapsack {
   std::valarray<float> prices;
   std::valarray<float> weights;
   float capacity;
+  explicit Knapsack(std::size_t n)
+      : prices{std::valarray<float>(n)}, weights{std::valarray<float>(n)},
+        capacity{0.f} {};
 
   explicit Knapsack(std::size_t v, float m, std::size_t n, std::size_t seed);
 
