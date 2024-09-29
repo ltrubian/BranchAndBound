@@ -28,6 +28,15 @@ const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
   // constraints
   problem.lp_.row_lower_ = {0.0};
   problem.lp_.row_upper_ = {this->capacity};
+  problem.lp_.a_matrix_.num_row_ = 1;
+  problem.lp_.a_matrix_.num_col_ = this->prices.size();
+  problem.lp_.a_matrix_.format_ = MatrixFormat::kColwise;
+  std::vector<int> ind(this->prices.size() + 1);
+  std::iota(ind.begin(), ind.end(), 0);
+  problem.lp_.a_matrix_.start_ = ind;
+  std::vector<int> ind_1(this->prices.size());
+  std::fill(ind_1.begin(), ind_1.end(), 0);
+  problem.lp_.a_matrix_.index_ = ind_1;
   problem.lp_.a_matrix_.value_ =
       std::vector<double>(std::begin(this->weights), std::end(this->weights));
   // integrality ?
@@ -53,7 +62,8 @@ const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
 
   return opt_sol;
 }
-const float
+
+/*const float
 KnapsackHighs::objective(const std::valarray<float> &solution) const {
   float res{0.0};
   auto sol{std::begin(solution)};
@@ -64,7 +74,7 @@ KnapsackHighs::objective(const std::valarray<float> &solution) const {
   }
   return -res;
 }
-
+*/
 /*
   std::valarray<std::pair<float, std::size_t>> indexes{real_prices.size()};
   std::generate(std::begin(indexes), std::end(indexes), [&]() {

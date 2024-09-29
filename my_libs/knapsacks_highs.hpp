@@ -11,6 +11,9 @@
 struct KnapsackHighs : Knapsack {
   HighsModel problem;
 
+  KnapsackHighs(const Knapsack &model)
+      : Knapsack(model), problem{HighsModel()} {};
+
   /**
    * This method is called in the branch_bound template function.
    * No integrality constrains are guaranteed

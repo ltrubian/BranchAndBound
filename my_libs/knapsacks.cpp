@@ -15,7 +15,7 @@ Knapsack::Knapsack(std::size_t v, float m, std::size_t n, std::size_t seed)
   // pairs generation
   std::mt19937_64 gen(seed);
   std::uniform_real_distribution<float> dis_w(1.0f, 1000.0f);
-  std::valarray<float> small_w(v), small_p(n);
+  std::valarray<float> small_w(v), small_p(v);
   std::generate(std::begin(small_w), std::end(small_w),
                 [&]() { return dis_w(gen); });
   for (auto i{0ul}; i < v; ++i) {
