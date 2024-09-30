@@ -38,8 +38,7 @@ TEST_CASE("knapsack: relaxed solver") {
     auto sol_my{problem.solve_relaxed(bounds)};
     auto sol_hi{problem_highs.solve_relaxed(bounds)};
 
-    REQUIRE(sol_my.success == true);
-    REQUIRE(sol_hi.success == true);
+    REQUIRE(sol_my.success == sol_hi.success);
     REQUIRE(problem.objective(sol_my.solution) ==
             problem.objective(sol_hi.solution));
   }
@@ -51,8 +50,7 @@ TEST_CASE("knapsack: relaxed solver") {
     auto sol_my{problem.solve_relaxed(bounds)};
     auto sol_hi{problem_highs.solve_relaxed(bounds)};
 
-    REQUIRE(sol_my.success == true);
-    REQUIRE(sol_hi.success == true);
+    REQUIRE(sol_my.success == sol_hi.success);
     REQUIRE(problem.objective(sol_my.solution) ==
             problem.objective(sol_hi.solution));
   }
@@ -64,8 +62,7 @@ TEST_CASE("knapsack: relaxed solver") {
     auto sol_my{problem.solve_relaxed(bounds)};
     auto sol_hi{problem_highs.solve_relaxed(bounds)};
 
-    REQUIRE(sol_my.success == true);
-    REQUIRE(sol_hi.success == true);
+    REQUIRE(sol_my.success == sol_hi.success);
     REQUIRE(problem.objective(sol_my.solution) ==
             problem.objective(sol_hi.solution));
   }

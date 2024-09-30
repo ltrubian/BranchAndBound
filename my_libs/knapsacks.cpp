@@ -39,14 +39,15 @@ Knapsack::Knapsack(std::size_t v, float m, std::size_t n, std::size_t seed)
     this->weights[i] = std::ceil(small_w[pair] * mult);
   }
   // set capacity
-  this->capacity = std::ceil(this->weights.sum() / 3);
+  float tmp {std::accumulate(this->weights.begin(), this->weights.end(), 0.f)};
+  this->capacity = std::ceil(tmp/ 3);
 };
 
 const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   assert(bounds.upper.size() == bounds.lower.size() &&
          bounds.upper.size() == this->prices.size() &&
          bounds.upper.size() == this->weights.size());
-  OptimalSolution opt_sol{};
+  OptimalSolution opt_sol;
   float correct_capacity{this->capacity -
                          std::inner_product(std::begin(bounds.lower),
                                             std::end(bounds.lower),
@@ -74,9 +75,9 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   assert(std::all_of(std::begin(indexes), std::end(indexes), [&](std::size_t p) {return p < this->prices.size();}));
   assert(indexes.size() == this->prices.size());
   assert(*(std::end(indexes) - 1) + 1 == real_prices.size());
-  std::sort(std::begin(indexes), std::end(indexes),
-            [&](std::size_t x, std::size_t y) {
-              return real_prices[x] >= real_prices[y];
+  std::sort(indexes.begin(), indexes.end(),
+            [&](std::size_t& x, std::size_t& y) {
+              return real_prices[x] > real_prices[y];
             });
   for (auto ind{std::begin(indexes)};
        ind != std::begin(indexes) + items_takable; ++ind) {
