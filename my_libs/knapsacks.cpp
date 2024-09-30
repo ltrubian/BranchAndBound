@@ -1,11 +1,14 @@
 #include "knapsacks.hpp"
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <forward_list>
+#include <iostream>
 #include <iterator>
 #include <numeric>
 #include <random>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <valarray>
@@ -40,6 +43,9 @@ Knapsack::Knapsack(std::size_t v, float m, std::size_t n, std::size_t seed)
 };
 
 const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
+  assert(bounds.upper.size() == bounds.lower.size() &&
+         bounds.upper.size() == this->prices.size() &&
+         bounds.upper.size() == this->weights.size());
   OptimalSolution opt_sol{};
   float correct_capacity{this->capacity -
                          std::inner_product(std::begin(bounds.lower),
@@ -48,10 +54,11 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   // if the items the bounds make me take are too much => infeasible bounds
   if (correct_capacity < 0)
     return opt_sol;
-  std::valarray<float> real_prices{this->prices / this->weights * bounds.upper *
-                                   (1.0f - bounds.lower)};
+  std::valarray<float> real_prices{bounds.upper * (1.0f - bounds.lower)};
+  assert(real_prices.size() == this->prices.size());
   long int items_takable{
-      std::count(std::begin(real_prices), std::end(real_prices), 0.0f)};
+      std::count_if(std::begin(real_prices), std::end(real_prices), [](float p) {return 0.f != p;})};
+  assert(items_takable <= this->prices.size());
   // if there are no other items to take but the ones I must => the solution is
   // the item I must take
   opt_sol.solution =
@@ -60,8 +67,13 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
     opt_sol.success = true;
     return opt_sol;
   }
+  real_prices *= (this->prices / this->weights);
+  assert(real_prices.size() == this->prices.size());
   std::valarray<std::size_t> indexes(real_prices.size());
-  std::iota(std::begin(indexes), std::end(indexes), 0);
+  std::iota(std::begin(indexes), std::end(indexes), 0ul);
+  assert(std::all_of(std::begin(indexes), std::end(indexes), [&](std::size_t p) {return p < this->prices.size();}));
+  assert(indexes.size() == this->prices.size());
+  assert(*(std::end(indexes) - 1) + 1 == real_prices.size());
   std::sort(std::begin(indexes), std::end(indexes),
             [&](std::size_t x, std::size_t y) {
               return real_prices[x] >= real_prices[y];

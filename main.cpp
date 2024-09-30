@@ -2,39 +2,35 @@
 #include <forward_list>
 #include <iostream>
 #include <limits>
+#include <random>
 
+Bounds random_bounds(std::size_t n, std::size_t seed) {
+  Bounds bounds(n, 0.f, 1.f);
+  std::mt19937_64 gen(seed);
+  std::uniform_int_distribution<std::size_t> dis(0, 2);
+  for (auto i{0ul}; i < n; ++i) {
+    switch (dis(gen)) {
+    case 0:
+      bounds.lower[i] = 1.f;
+      break;
+    case 1:
+      bounds.upper[i] = 0.f;
+      break;
+    case 2:
+      break;
+    }
+  }
+
+  return bounds;
+};
 int main() {
-  std::cout << "Hello World! " << (-std::numeric_limits<float>::infinity() > 5)
-            << std::endl;
-  std::cout << 5 / 6 << std::endl;
-  std::cout << 10 / 6 << std::endl;
-  const int &A{3};
+  std::random_device rd;
+  std::uniform_int_distribution<std::size_t> di(0);
+  std::size_t n{20};
+  Bounds bounds(random_bounds(n,di(rd)));
+  Knapsack prob{5, 20.f, 20, di(rd)};
+  prob.solve_relaxed(bounds);
 
-  std::forward_list<char> chars{'A', 'B', 'C', 'D'};
-
-  for (; !chars.empty(); chars.pop_front())
-    std::cout << "chars.front(): '" << chars.front() << "'\n";
-
-  std::size_t index = 1;
-  Bounds current_bounds(3);
-
-  std::cout << current_bounds;
-  Bounds new_bounds{current_bounds};
-  std::cout << new_bounds;
-  new_bounds.upper[index] = 3;
-  std::cout << new_bounds;
-  current_bounds.lower[index] = 3 + 1.0;
-  std::cout << new_bounds;
-  std::cout << current_bounds;
-  std::valarray<std::size_t> in{3, 4, 0, 7};
-  std::valarray<int> l{-1, 1, 2, 3, 4, 5, 6, 7};
-  std::valarray<std::size_t> rep{in[std::slice(0, 2, 1)]};
-  for (auto &x : rep)
-    std::cout << x << "\t";
-  std::cout << std::endl;
-  for (auto &x : in)
-    std::cout << x << "\t";
-  std::cout << std::endl;
 
   return 0;
 }
