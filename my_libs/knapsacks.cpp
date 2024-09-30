@@ -11,14 +11,14 @@
 #include <string>
 #include <tuple>
 #include <utility>
-#include <valarray>
+#include <vector>
 
 Knapsack::Knapsack(std::size_t v, float m, std::size_t n, std::size_t seed)
     : Knapsack{n} {
   // pairs generation
   std::mt19937_64 gen(seed);
   std::uniform_real_distribution<float> dis_w(1.0f, 1000.0f);
-  std::valarray<float> small_w(v), small_p(v);
+  std::vector<float> small_w(v), small_p(v);
   std::generate(std::begin(small_w), std::end(small_w),
                 [&]() { return dis_w(gen); });
   for (auto i{0ul}; i < v; ++i) {
@@ -54,7 +54,7 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   // if the items the bounds make me take are too much => infeasible bounds
   if (correct_capacity < 0)
     return opt_sol;
-  std::valarray<float> real_prices{bounds.upper * (1.0f - bounds.lower)};
+  std::vector<float> real_prices{bounds.upper * (1.0f - bounds.lower)};
   assert(real_prices.size() == this->prices.size());
   long int items_takable{
       std::count_if(std::begin(real_prices), std::end(real_prices), [](float p) {return 0.f != p;})};
@@ -69,7 +69,7 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   }
   real_prices *= (this->prices / this->weights);
   assert(real_prices.size() == this->prices.size());
-  std::valarray<std::size_t> indexes(real_prices.size());
+  std::vector<std::size_t> indexes(real_prices.size());
   std::iota(std::begin(indexes), std::end(indexes), 0ul);
   assert(std::all_of(std::begin(indexes), std::end(indexes), [&](std::size_t p) {return p < this->prices.size();}));
   assert(indexes.size() == this->prices.size());
@@ -92,7 +92,7 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   return opt_sol;
 }
 
-const float Knapsack::objective(const std::valarray<float> &solution) const {
+const float Knapsack::objective(const std::vector<float> &solution) const {
   float res{0.0};
   auto sol{std::begin(solution)};
   for (auto price{std::begin(this->prices)}; price != std::begin(this->prices);
@@ -102,18 +102,6 @@ const float Knapsack::objective(const std::valarray<float> &solution) const {
   }
   return -res;
 }
-
-std::ostream &operator<<(std::ostream &os, const Bounds &b) {
-  for (const auto &x : b.lower) {
-    os << x << "\t";
-  }
-  os << "\n";
-  for (const auto &x : b.upper) {
-    os << x << "\t";
-  }
-  os << std::endl;
-  return os;
-};
 
 const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
   OptimalSolution opt_sol;

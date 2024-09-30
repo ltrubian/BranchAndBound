@@ -1,51 +1,41 @@
 #ifndef __KNAPSACKS__
 #define __KNAPSACKS__
 
-#include <cstddef>
 #include <limits>
-#include <ostream>
-#include <valarray>
+#include <vector>
 
 struct OptimalSolution {
   bool success;
   std::size_t nodes;
   float value;
-  std::valarray<float> solution;
+  std::vector<float> solution;
 
   OptimalSolution()
       : success{false}, nodes{0}, value{std::numeric_limits<float>::infinity()},
-        solution{std::valarray<float>()} {};
-};
-
-enum BoundType {
-  lower = 0,
-  upper = 1,
+        solution{std::vector<float>()} {};
 };
 
 struct Bounds {
-  std::valarray<float> lower;
-  std::valarray<float> upper;
+  std::vector<float> lower;
+  std::vector<float> upper;
 
-  Bounds() : lower{std::valarray<float>()}, upper{std::valarray<float>()} {};
+  Bounds() : lower{std::vector<float>()}, upper{std::vector<float>()} {};
   Bounds(std::size_t n, float low, float up)
-      : lower{std::valarray<float>(low, n)}, upper{std::valarray<float>(up,
-                                                                        n)} {};
+      : lower{std::vector<float>(n, low)}, upper{std::vector<float>(n, up)} {};
   explicit Bounds(std::size_t n)
       : Bounds(n, -std::numeric_limits<float>::infinity(),
                std::numeric_limits<float>::infinity()){};
 };
 
-std::ostream &operator<<(std::ostream &os, const Bounds &b);
-
 /**
  * My class of the Knapsack problem
  */
 struct Knapsack {
-  std::valarray<float> prices;
-  std::valarray<float> weights;
+  std::vector<float> prices;
+  std::vector<float> weights;
   float capacity;
   explicit Knapsack(std::size_t n)
-      : prices{std::valarray<float>(n)}, weights{std::valarray<float>(n)},
+      : prices{std::vector<float>(n)}, weights{std::vector<float>(n)},
         capacity{0.f} {};
 
   /**
@@ -56,7 +46,7 @@ struct Knapsack {
 
   const OptimalSolution solve_relaxed(const Bounds &bounds) const;
 
-  const float objective(const std::valarray<float> &solution) const;
+  const float objective(const std::vector<float> &solution) const;
 
   const OptimalSolution branch_bound(Bounds &bounds) const;
 };

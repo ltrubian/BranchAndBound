@@ -6,7 +6,6 @@
 #include <lp_data/HighsStatus.h>
 #include <numeric>
 #include <utility>
-#include <valarray>
 #include <vector>
 
 const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
@@ -57,8 +56,7 @@ const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
   const HighsSolution &info = highs.getSolution();
   opt_sol.success = highs.getInfo().primal_solution_status;
 
-  std::vector<float> tmp{info.col_value.begin(), info.col_value.end()};
-  opt_sol.solution = std::valarray<float>(tmp.data(), tmp.size());
+  opt_sol.solution = std::vector<float>(info.col_value.begin(), info.col_value.end());
 
   return opt_sol;
 }
