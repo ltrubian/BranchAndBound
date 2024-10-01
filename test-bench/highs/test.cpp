@@ -39,8 +39,7 @@ TEST_CASE("knapsack: relaxed solver") {
     auto sol_hi{problem_highs.solve_relaxed(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE(problem.objective(sol_my.solution) ==
-            problem.objective(sol_hi.solution));
+    REQUIRE(sol_my.value == sol_hi.value);
   }
   SECTION("default bounds, random problems") {
     std::size_t seed = GENERATE(take(100, random(0, 1000)));
@@ -51,8 +50,7 @@ TEST_CASE("knapsack: relaxed solver") {
     auto sol_hi{problem_highs.solve_relaxed(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE(problem.objective(sol_my.solution) ==
-            problem.objective(sol_hi.solution));
+    REQUIRE(sol_my.value == sol_hi.value);
   }
   SECTION("random bounds") {
     std::size_t seed = GENERATE(take(100, random(0, 1000)));
@@ -63,7 +61,6 @@ TEST_CASE("knapsack: relaxed solver") {
     auto sol_hi{problem_highs.solve_relaxed(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE(problem.objective(sol_my.solution) ==
-            problem.objective(sol_hi.solution));
+    REQUIRE(sol_my.value == sol_hi.value);
   }
 }

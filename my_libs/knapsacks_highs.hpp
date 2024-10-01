@@ -34,8 +34,6 @@ struct KnapsackHighs : Knapsack {
    */
   const OptimalSolution highs_solver(const Bounds &bounds,
                                      bool integrality) const;
-
-  const float objective(const std::valarray<float> &solution) const;
 };
 
 #endif // __KNAPSACKS__HIGHS__

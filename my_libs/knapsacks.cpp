@@ -66,6 +66,7 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
       bounds.lower; // and the lower bounds are the "starting" optimal solution
   if (items_takable == 0) {
     opt_sol.success = true;
+    opt_sol.value = this->objective(opt_sol.solution);
     return opt_sol;
   }
   real_prices *= (this->prices / this->weights);
@@ -89,6 +90,7 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
     opt_sol.solution[*ind] = 1.0f;
   }
   opt_sol.success = true;
+  opt_sol.value = this->objective(opt_sol.solution);
 
   return opt_sol;
 }
@@ -106,7 +108,6 @@ const float Knapsack::objective(const std::vector<float> &solution) const {
 
 const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
   OptimalSolution opt_sol;
-  float best_value{std::numeric_limits<float>::infinity()};
 
   std::forward_list<Bounds> active_problems;
   active_problems.emplace_front(bounds);
@@ -118,7 +119,7 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
     OptimalSolution current_sol{this->solve_relaxed(current_bounds)};
 
     if (!current_sol.success or
-        best_value < this->objective(current_sol.solution)) {
+        opt_sol.value < current_sol.value) {
       continue;
     }
 
@@ -134,9 +135,8 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
     }
 
     if (fractional == 0.0) {
-      float new_value{this->objective(current_sol.solution)};
-      if (new_value < best_value) {
-        best_value = new_value;
+      if (current_sol.value < opt_sol.value) {
+        opt_sol.value = current_sol.value;
         opt_sol.solution = current_sol.solution;
       }
       continue;

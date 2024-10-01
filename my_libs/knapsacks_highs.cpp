@@ -56,7 +56,9 @@ const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
   const HighsSolution &info = highs.getSolution();
   opt_sol.success = highs.getInfo().primal_solution_status;
 
-  opt_sol.solution = std::vector<float>(info.col_value.begin(), info.col_value.end());
-
+  if (opt_sol.success) {
+    opt_sol.solution = std::vector<float>(info.col_value.begin(), info.col_value.end());
+    opt_sol.value = this->objective(opt_sol.solution);
+  }
   return opt_sol;
 }
