@@ -112,9 +112,10 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
   std::forward_list<Bounds> active_problems;
   active_problems.emplace_front(bounds);
 
-  for (; !active_problems.empty(); active_problems.pop_front()) {
+  for (; !active_problems.empty(); ) {
     ++opt_sol.nodes;
     Bounds current_bounds{active_problems.front()};
+    active_problems.pop_front();
 
     OptimalSolution current_sol{this->solve_relaxed(current_bounds)};
 
@@ -123,11 +124,11 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
       continue;
     }
 
-    float fractional{0.0};
-    float integral;
+    float fractional{0.f};
+    float integral{0.f};
     auto index{0};
     for (auto &x : current_sol.solution) {
-      integral = std::modf(x, &fractional);
+      fractional = std::modf(x, &integral);
       if (fractional != 0.0) {
         index = &x - &current_sol.solution[0];
         break;

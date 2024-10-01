@@ -1,4 +1,5 @@
 #include "knapsacks.hpp"
+#include "knapsacks_highs.hpp"
 #include <forward_list>
 #include <iostream>
 #include <limits>
@@ -26,10 +27,11 @@ Bounds random_bounds(std::size_t n, std::size_t seed) {
 int main() {
   std::random_device rd;
   std::uniform_int_distribution<std::size_t> di(0);
-  std::size_t n{20};
+  std::size_t n{50};
   Bounds bounds(random_bounds(n,di(rd)));
-  Knapsack prob{5, 20.f, 20, di(rd)};
-  prob.solve_relaxed(bounds);
+  Knapsack prob{5, 20.f, n, di(rd)};
+  KnapsackHighs prob_h{prob};
+  prob.branch_bound(bounds);
 
 
   return 0;
