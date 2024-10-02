@@ -39,8 +39,8 @@ Knapsack::Knapsack(std::size_t v, float m, std::size_t n, std::size_t seed)
     this->weights[i] = std::ceil(small_w[pair] * mult);
   }
   // set capacity
-  float tmp {std::accumulate(this->weights.begin(), this->weights.end(), 0.f)};
-  this->capacity = std::ceil(tmp/ 3);
+  float tmp{std::accumulate(this->weights.begin(), this->weights.end(), 0.f)};
+  this->capacity = std::ceil(tmp / 3);
 };
 
 const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
@@ -57,8 +57,9 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
     return opt_sol;
   std::vector<float> real_prices{bounds.upper * (1.0f - bounds.lower)};
   assert(real_prices.size() == this->prices.size());
-  long int items_takable{
-      std::count_if(std::begin(real_prices), std::end(real_prices), [](float p) {return 0.f != p;})};
+  long int items_takable{std::count_if(std::begin(real_prices),
+                                       std::end(real_prices),
+                                       [](float p) { return 0.f != p; })};
   assert(items_takable <= this->prices.size());
   // if there are no other items to take but the ones I must => the solution is
   // the item I must take
@@ -73,11 +74,12 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   assert(real_prices.size() == this->prices.size());
   std::vector<std::size_t> indexes(real_prices.size());
   std::iota(std::begin(indexes), std::end(indexes), 0ul);
-  assert(std::all_of(std::begin(indexes), std::end(indexes), [&](std::size_t p) {return p < this->prices.size();}));
+  assert(std::all_of(std::begin(indexes), std::end(indexes),
+                     [&](std::size_t p) { return p < this->prices.size(); }));
   assert(indexes.size() == this->prices.size());
   assert(*(std::end(indexes) - 1) + 1 == real_prices.size());
   std::sort(indexes.begin(), indexes.end(),
-            [&](std::size_t& x, std::size_t& y) {
+            [&](std::size_t &x, std::size_t &y) {
               return real_prices[x] > real_prices[y];
             });
   for (auto ind{std::begin(indexes)};
@@ -98,7 +100,7 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
 const float Knapsack::objective(const std::vector<float> &solution) const {
   float res{0.0};
   auto sol{std::begin(solution)};
-  for (auto price{std::begin(this->prices)}; price != std::begin(this->prices);
+  for (auto price{std::begin(this->prices)}; price != std::end(this->prices);
        ++price) {
     res = std::move(res) + *price * *sol;
     ++sol;
@@ -112,15 +114,14 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
   std::forward_list<Bounds> active_problems;
   active_problems.emplace_front(bounds);
 
-  for (; !active_problems.empty(); ) {
+  for (; !active_problems.empty();) {
     ++opt_sol.nodes;
     Bounds current_bounds{active_problems.front()};
     active_problems.pop_front();
 
     OptimalSolution current_sol{this->solve_relaxed(current_bounds)};
 
-    if (!current_sol.success or
-        opt_sol.value < current_sol.value) {
+    if (!current_sol.success or opt_sol.value > current_sol.value) {
       continue;
     }
 
@@ -136,7 +137,7 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
     }
 
     if (fractional == 0.f) {
-      if (current_sol.value < opt_sol.value) {
+      if (current_sol.value > opt_sol.value) {
         opt_sol.value = current_sol.value;
         opt_sol.solution = current_sol.solution;
       }
@@ -151,6 +152,7 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
     current_bounds.lower[index] = integral + 1.0;
     active_problems.emplace_front(current_bounds);
   }
-  opt_sol.success = true;
+  opt_sol.success = active_problems.empty() &&
+                    opt_sol.value != -std::numeric_limits<float>::infinity();
   return opt_sol;
 }

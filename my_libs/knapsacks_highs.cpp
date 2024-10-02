@@ -1,6 +1,7 @@
 #include "knapsacks_highs.hpp"
 #include "Highs.h"
 #include <algorithm>
+#include <cstdio>
 #include <lp_data/HConst.h>
 #include <lp_data/HStruct.h>
 #include <lp_data/HighsStatus.h>
@@ -33,9 +34,7 @@ const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
   std::vector<int> ind(this->prices.size() + 1);
   std::iota(ind.begin(), ind.end(), 0);
   problem.lp_.a_matrix_.start_ = ind;
-  std::vector<int> ind_1(this->prices.size());
-  std::fill(ind_1.begin(), ind_1.end(), 0);
-  problem.lp_.a_matrix_.index_ = ind_1;
+  problem.lp_.a_matrix_.index_ = std::vector<int>(this->prices.size(), 0);
   problem.lp_.a_matrix_.value_ =
       std::vector<double>(std::begin(this->weights), std::end(this->weights));
   // integrality ?
@@ -47,6 +46,7 @@ const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
   // solve
   Highs highs;
   HighsStatus return_status;
+  highs.setHighsOutput(tmpfile());
   return_status = highs.passModel(problem);
   assert(return_status == HighsStatus::kOk);
 
@@ -57,7 +57,8 @@ const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
   opt_sol.success = highs.getInfo().primal_solution_status;
 
   if (opt_sol.success) {
-    opt_sol.solution = std::vector<float>(info.col_value.begin(), info.col_value.end());
+    opt_sol.solution =
+        std::vector<float>(info.col_value.begin(), info.col_value.end());
     opt_sol.value = this->objective(opt_sol.solution);
   }
   return opt_sol;

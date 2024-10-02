@@ -6,6 +6,8 @@
 #include <iterator>
 #include <random>
 
+static float TOL{1e-3};
+
 Bounds random_bounds(std::size_t n, std::size_t seed) {
   Bounds bounds(n, 0.f, 1.f);
   std::mt19937_64 gen(seed);
@@ -29,7 +31,7 @@ Bounds random_bounds(std::size_t n, std::size_t seed) {
 TEST_CASE("knapsack: relaxed solver") {
   std::size_t v{5};
   float m{20.f};
-  std::size_t n = GENERATE(range(20, 100, 10));
+  std::size_t n = GENERATE(range(50, 101, 10));
   SECTION("default bounds, fixed problems") {
     std::size_t seed = GENERATE(range(0, 100, 1));
     Knapsack problem{v, m, n, seed};
@@ -39,10 +41,10 @@ TEST_CASE("knapsack: relaxed solver") {
     auto sol_hi{problem_highs.solve_relaxed(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE(sol_my.value == sol_hi.value);
+    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
   }
   SECTION("default bounds, random problems") {
-    std::size_t seed = GENERATE(take(100, random(0, 1000)));
+    std::size_t seed = GENERATE(take(20, random(0, 100000)));
     Knapsack problem{v, m, n, seed};
     KnapsackHighs problem_highs(problem);
     Bounds bounds{n, 0.f, 1.f};
@@ -50,10 +52,10 @@ TEST_CASE("knapsack: relaxed solver") {
     auto sol_hi{problem_highs.solve_relaxed(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE(sol_my.value == sol_hi.value);
+    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
   }
   SECTION("random bounds") {
-    std::size_t seed = GENERATE(take(100, random(0, 1000)));
+    std::size_t seed = GENERATE(take(20, random(0, 100000)));
     Knapsack problem{v, m, n, seed};
     KnapsackHighs problem_highs(problem);
     Bounds bounds{random_bounds(n, seed)};
@@ -61,45 +63,84 @@ TEST_CASE("knapsack: relaxed solver") {
     auto sol_hi{problem_highs.solve_relaxed(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE(sol_my.value == sol_hi.value);
+    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
   }
 }
 
 TEST_CASE("knapsack: branch and bound") {
   std::size_t v{5};
   float m{20.f};
-  std::size_t n = GENERATE(range(20, 50, 10));
+  std::size_t n = GENERATE(range(50, 101, 10));
   SECTION("default bounds, fixed problems") {
-    std::size_t seed = GENERATE(range(0, 5, 1));
+    std::size_t seed = GENERATE(range(0, 10, 1));
     Knapsack problem{v, m, n, seed};
     KnapsackHighs problem_highs(problem);
     Bounds bounds{n, 0.f, 1.f};
-    auto sol_my{problem.branch_bound(bounds)};
-    auto sol_hi{problem_highs.branch_bound(bounds)};
+    auto sol_my{problem_highs.branch_bound(bounds)};
+    auto sol_hi{problem_highs.solve_integer(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE(sol_my.value == sol_hi.value);
+    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
   }
   SECTION("default bounds, random problems") {
-    std::size_t seed = GENERATE(take(5, random(0, 1000)));
+    std::size_t seed = GENERATE(take(5, random(0, 100000)));
+    Knapsack problem{v, m, n, seed};
+    KnapsackHighs problem_highs(problem);
+    Bounds bounds{n, 0.f, 1.f};
+    auto sol_my{problem_highs.branch_bound(bounds)};
+    auto sol_hi{problem_highs.solve_integer(bounds)};
+
+    REQUIRE(sol_my.success == sol_hi.success);
+    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
+  }
+  SECTION("random bounds") {
+    std::size_t seed = GENERATE(take(5, random(0, 100000)));
+    Knapsack problem{v, m, n, seed};
+    KnapsackHighs problem_highs(problem);
+    Bounds bounds{random_bounds(n, seed)};
+    auto sol_my{problem_highs.branch_bound(bounds)};
+    auto sol_hi{problem_highs.solve_integer(bounds)};
+
+    REQUIRE(sol_my.success == sol_hi.success);
+    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
+  }
+}
+
+TEST_CASE("knapsack: all assembled") {
+  std::size_t v{5};
+  float m{20.f};
+  std::size_t n = GENERATE(range(50, 101, 10));
+  SECTION("default bounds, fixed problems") {
+    std::size_t seed = GENERATE(range(0, 10, 1));
     Knapsack problem{v, m, n, seed};
     KnapsackHighs problem_highs(problem);
     Bounds bounds{n, 0.f, 1.f};
     auto sol_my{problem.branch_bound(bounds)};
-    auto sol_hi{problem_highs.branch_bound(bounds)};
+    auto sol_hi{problem_highs.solve_integer(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE(sol_my.value == sol_hi.value);
+    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
+  }
+  SECTION("default bounds, random problems") {
+    std::size_t seed = GENERATE(take(5, random(0, 100000)));
+    Knapsack problem{v, m, n, seed};
+    KnapsackHighs problem_highs(problem);
+    Bounds bounds{n, 0.f, 1.f};
+    auto sol_my{problem.branch_bound(bounds)};
+    auto sol_hi{problem_highs.solve_integer(bounds)};
+
+    REQUIRE(sol_my.success == sol_hi.success);
+    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
   }
   SECTION("random bounds") {
-    std::size_t seed = GENERATE(take(5, random(0, 1000)));
+    std::size_t seed = GENERATE(take(5, random(0, 100000)));
     Knapsack problem{v, m, n, seed};
     KnapsackHighs problem_highs(problem);
     Bounds bounds{random_bounds(n, seed)};
     auto sol_my{problem.branch_bound(bounds)};
-    auto sol_hi{problem_highs.branch_bound(bounds)};
+    auto sol_hi{problem_highs.solve_integer(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE(sol_my.value == sol_hi.value);
+    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
   }
 }

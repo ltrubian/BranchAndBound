@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 project(Branch_and_Bound)
-set(CMAKE_CXX_FLAGS "-O3 -std=c++11")
+set(CMAKE_CXX_FLAGS " -std=c++11")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_EXECUTABLE_SUFFIX ".x")
 
@@ -22,7 +22,7 @@ find_package(Threads REQUIRED)
 target_link_libraries(knapsack_highs_lib  highs::highs)
 
 enable_testing()
-add_test(NAME test_highs
+add_test(NAME test-highs
         COMMAND $<TARGET_FILE:test-highs>)
 		
 file(GLOB_RECURSE ALL_SOURCE_FILES

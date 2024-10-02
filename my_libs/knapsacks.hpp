@@ -11,7 +11,8 @@ struct OptimalSolution {
   std::vector<float> solution;
 
   OptimalSolution()
-      : success{false}, nodes{0}, value{std::numeric_limits<float>::infinity()},
+      : success{false}, nodes{0},
+        value{-std::numeric_limits<float>::infinity()},
         solution{std::vector<float>()} {};
 };
 
@@ -51,48 +52,46 @@ struct Knapsack {
   const OptimalSolution branch_bound(Bounds &bounds) const;
 };
 
-template<typename T>
-std::vector<T> operator-(T b, const std::vector<T>& a){
+template <typename T> std::vector<T> operator-(T b, const std::vector<T> &a) {
   std::vector<T> res(a.size());
-  for(std::size_t i{0}; i < a.size(); ++i){
+  for (std::size_t i{0}; i < a.size(); ++i) {
     res[i] = b - a[i];
   }
   return res;
 };
 
-template<typename T>
-std::vector<T> operator*(const std::vector<T>& a, const std::vector<T>& b){
+template <typename T>
+std::vector<T> operator*(const std::vector<T> &a, const std::vector<T> &b) {
   std::vector<T> res(a.size());
-  for(std::size_t i{0}; i < a.size(); ++i){
+  for (std::size_t i{0}; i < a.size(); ++i) {
     res[i] = a[i] * b[i];
   }
   return res;
 };
 
-template<typename T>
-std::vector<T> operator*=(std::vector<T>& a, const std::vector<T>& b){
-  for(std::size_t i{0}; i < a.size(); ++i){
+template <typename T>
+std::vector<T> operator*=(std::vector<T> &a, const std::vector<T> &b) {
+  for (std::size_t i{0}; i < a.size(); ++i) {
     a[i] *= b[i];
   }
   return a;
 };
-template<typename T>
-std::vector<T> operator*=(std::vector<T>&& a, const std::vector<T>& b){
-  return std::forward<std::vector<T>> ( a *= b);
+template <typename T>
+std::vector<T> operator*=(std::vector<T> &&a, const std::vector<T> &b) {
+  return std::forward<std::vector<T>>(a *= b);
 };
 
-template<typename T>
-std::vector<T> operator/(const std::vector<T>& a, const std::vector<T>& b){
+template <typename T>
+std::vector<T> operator/(const std::vector<T> &a, const std::vector<T> &b) {
   std::vector<T> res(a.size());
-  for(std::size_t i{0}; i < a.size(); ++i){
+  for (std::size_t i{0}; i < a.size(); ++i) {
     res[i] = a[i] / b[i];
   }
   return res;
 };
 
-template<typename T>
-std::vector<T> operator/=(std::vector<T>& a, const T& b){
-  for(std::size_t i{0}; i < a.size(); ++i){
+template <typename T> std::vector<T> operator/=(std::vector<T> &a, const T &b) {
+  for (std::size_t i{0}; i < a.size(); ++i) {
     a[i] /= b;
   }
   return a;
