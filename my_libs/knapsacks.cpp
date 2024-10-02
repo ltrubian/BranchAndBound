@@ -47,7 +47,7 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   assert(bounds.upper.size() == bounds.lower.size() &&
          bounds.upper.size() == this->prices.size() &&
          bounds.upper.size() == this->weights.size());
-  OptimalSolution opt_sol;
+  OptimalSolution opt_sol{};
   float correct_capacity{this->capacity -
                          std::inner_product(std::begin(bounds.lower),
                                             std::end(bounds.lower),
@@ -103,7 +103,7 @@ const float Knapsack::objective(const std::vector<float> &solution) const {
     res = std::move(res) + *price * *sol;
     ++sol;
   }
-  return -res;
+  return res;
 }
 
 const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
@@ -129,13 +129,13 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
     auto index{0};
     for (auto &x : current_sol.solution) {
       fractional = std::modf(x, &integral);
-      if (fractional != 0.0) {
+      if (fractional != 0.f) {
         index = &x - &current_sol.solution[0];
         break;
       }
     }
 
-    if (fractional == 0.0) {
+    if (fractional == 0.f) {
       if (current_sol.value < opt_sol.value) {
         opt_sol.value = current_sol.value;
         opt_sol.solution = current_sol.solution;

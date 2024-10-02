@@ -5,6 +5,3 @@ target_include_directories(test-highs
                             PUBLIC "${PROJECT_SOURCE_DIR}/my_libs"
                             PUBLIC  "${PROJECT_SOURCE_DIR}/test-bench")
 
-enable_testing()
-add_test(NAME test_highs
-        COMMAND $<TARGET_FILE:test-highs>)
