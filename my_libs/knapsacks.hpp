@@ -52,6 +52,8 @@ struct Knapsack {
   const OptimalSolution branch_bound(Bounds &bounds) const;
 };
 
+// The definitions of the operations between vector (that are element-wise
+// operations) follow the syntax of numpy
 template <typename T> std::vector<T> operator-(T b, const std::vector<T> &a) {
   std::vector<T> res(a.size());
   for (std::size_t i{0}; i < a.size(); ++i) {

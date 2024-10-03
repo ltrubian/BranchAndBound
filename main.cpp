@@ -28,17 +28,17 @@ Bounds random_bounds(std::size_t n, std::size_t seed) {
 int main() {
   std::random_device rd;
   std::uniform_int_distribution<std::size_t> di(0);
-  std::size_t n{50};
+  std::size_t n{100};
   std::size_t s_b{di(rd)}, s_k{di(rd)};
-  // s_b = 10028898128814129205;
-  // s_k = 7818007402924833752;
+  // s_b = 14216009864108917669;
+  s_k = 8722141901008443932 ;
   std::cout << "seed bounds: \t" << s_b << "\n"
             << "seed knapsa: \t" << s_k << std::endl;
   Bounds bounds(random_bounds(n, s_b));
   Bounds real(n, 0.f, 1.f);
   Knapsack prob{5, 20.f, n, s_k};
   KnapsackHighs prob_h{prob};
-  OptimalSolution opt{prob.branch_bound(bounds)};
+  OptimalSolution opt{prob.branch_bound(real)};
   std::cout << opt.success << "\t" << opt.nodes << "\t" << opt.value;
   std::cout << std::endl;
   /*std::vector<float> tmp{0., 2., 3.4, 4., 6.};
