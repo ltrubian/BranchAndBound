@@ -2,6 +2,7 @@
 #define __KNAPSACKS__
 
 #include <limits>
+#include <memory>
 #include <vector>
 
 struct OptimalSolution {
@@ -28,6 +29,33 @@ struct Bounds {
                std::numeric_limits<float>::infinity()){};
 };
 
+struct Node {
+  float value;
+  std::size_t b_index;
+  float b_value; // for the knapsack it is always 0, but it is not so in general
+  Bounds bounds;
+  Node *left, *right;
+
+  Node()
+      : value(-std::numeric_limits<float>::infinity()), b_index{0},
+        b_value{0.f}, left{nullptr}, right{nullptr} {};
+  Node(float value, std::size_t b_index, float b_value, Bounds bounds)
+      : value{value}, b_index{b_index}, b_value{b_value}, bounds{std::move(
+                                                              bounds)} {};
+
+  ~Node() {
+    if (this->left != nullptr) {
+      this->left->~Node();
+    }
+    if (this->right != nullptr) {
+      this->right->~Node();
+    }
+  };
+
+  bool operator<(const Node &other) const { return this->value < other.value; };
+  bool operator>(const Node &other) const { return !(*this < other); };
+};
+
 /**
  * My class of the Knapsack problem
  */
@@ -49,7 +77,8 @@ struct Knapsack {
 
   const float objective(const std::vector<float> &solution) const;
 
-  const OptimalSolution branch_bound(Bounds &bounds) const;
+  const OptimalSolution
+  branch_bound(Bounds &bounds, OptimalSolution opt = OptimalSolution()) const;
 };
 
 // The definitions of the operations between vector (that are element-wise

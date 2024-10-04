@@ -3,10 +3,12 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <forward_list>
+#include <functional>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <numeric>
+#include <queue>
 #include <random>
 #include <string>
 #include <tuple>
@@ -98,25 +100,17 @@ const float Knapsack::objective(const std::vector<float> &solution) const {
   return res;
 }
 
-const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
+const OptimalSolution Knapsack::branch_bound(Bounds &bounds,
+                                             OptimalSolution opt) const {
   OptimalSolution opt_sol;
 
-  std::forward_list<Bounds> active_problems;
-  active_problems.emplace_front(bounds);
+  std::priority_queue<Node> active_problems;
 
-  while (!active_problems.empty()) {
-    ++opt_sol.nodes;
-    Bounds current_bounds{active_problems.front()};
-    active_problems.pop_front();
+  Node *root;
 
-    // solve the relaxed problem
-    OptimalSolution current_sol{this->solve_relaxed(current_bounds)};
-    // first bound: the current upper bound is relevant only if greater than the
-    // value of the best integer solution (that works as a lower bound of the
-    // solution)
-    if (!current_sol.success or opt_sol.value > current_sol.value) {
-      continue;
-    }
+  OptimalSolution current_sol{this->solve_relaxed(bounds)};
+
+  if (current_sol.success && opt_sol.value < current_sol.value) {
     // search for the first non integer value of the solution
     float integral{0.f}, fractional{0.f};
     auto index{0};
@@ -130,21 +124,59 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds) const {
     // second bound: if the solution is integer, that is the best solution for
     // the entire tree of its subproblem
     if (fractional == 0.f) {
-      if (current_sol.value > opt_sol.value) {
-        opt_sol.value = current_sol.value;
-        opt_sol.solution = current_sol.solution;
-      }
-      continue;
+      opt_sol.value = current_sol.value;
+      opt_sol.solution = current_sol.solution;
+    } else {
+      root->b_index = index;
+      root->b_value = integral;
+      root->value = current_sol.value;
+      root->bounds = std::move(bounds);
+      active_problems.emplace(*root);
     }
-    // ... oherwise branch
-    Bounds new_bounds{current_bounds};
-
-    new_bounds.upper[index] = integral;
-    active_problems.emplace_front(new_bounds);
-
-    current_bounds.lower[index] = integral + 1.0;
-    active_problems.emplace_front(current_bounds);
   }
+  Node *tmp;
+  while (!active_problems.empty()) {
+    ++opt_sol.nodes;
+    auto current_prob = active_problems.top();
+    active_problems.pop();
+
+    for (auto i{0}; i < 2; ++i) {
+      Bounds current_bounds{current_prob.bounds};
+      if (i == 0) {
+        current_bounds.upper[current_prob.b_index] = current_prob.b_value;
+      } else {
+        current_bounds.lower[current_prob.b_index] = current_prob.b_value + 1.f;
+      }
+
+      // solve the relaxed problem
+      OptimalSolution current_sol{this->solve_relaxed(current_bounds)};
+      if (current_sol.success && opt_sol.value < current_sol.value) {
+        // search for the first non integer value of the solution
+        float integral{0.f}, fractional{0.f};
+        auto index{0};
+        for (auto &x : current_sol.solution) {
+          fractional = std::modf(x, &integral);
+          if (fractional != 0.f) {
+            index = &x - &current_sol.solution[0];
+            break;
+          }
+        }
+        if (fractional == 0.f) {
+          opt_sol.value = current_sol.value;
+          opt_sol.solution = current_sol.solution;
+        } else {
+          *tmp = Node(opt_sol.value, index, integral, current_bounds);
+          if (i == 0) {
+            current_prob.left = tmp;
+          } else {
+            current_prob.right = tmp;
+          }
+          active_problems.emplace(*tmp);
+        }
+      }
+    }
+  }
+  std::cout << opt_sol.value << std::endl;
   // in case the loop is stopped, active_problems could contains subproblems to
   // explore
   opt_sol.success = active_problems.empty() &&
