@@ -2,6 +2,7 @@
 #define __KNAPSACKS__
 
 #include <limits>
+#include <memory>
 #include <set>
 #include <stdexcept>
 #include <vector>
@@ -56,7 +57,7 @@ struct Node {
   float b_value; // for the knapsack it is always 0, but it is not so in general
   bool integrality;
   bool explored;
-  Node *childs[2];
+  std::unique_ptr<Node> childs[2];
 
   Node()
       : value(-std::numeric_limits<float>::infinity()), b_index{0},

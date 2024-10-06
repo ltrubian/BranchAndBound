@@ -104,7 +104,7 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds,
                                              OptimalSolution opt) const {
   OptimalSolution opt_sol;
 
-  std::set<ExploreNode, BestBoundFirst> active_problems;
+  std::set<ExploreNode, DepthFirst> active_problems;
 
   Node root;
 
@@ -156,23 +156,21 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds,
             break;
           }
         }
-        Node *kid = new Node(opt_sol.value);
-        current_prob.node.childs[i] = kid;
+        current_prob.node.childs[i].reset(new Node(opt_sol.value));
         if (fractional == 0.f) {
           opt_sol.value = current_sol.value;
           opt_sol.solution = current_sol.solution;
-          kid->integrality = true;
+          current_prob.node.childs[i]->integrality = true;
         } else {
-          kid->b_index = index;
-          kid->b_value = integral;
-          active_problems.emplace(
-              ExploreNode(opt_sol.nodes, current_bounds, *kid));
+          current_prob.node.childs[i]->b_index = index;
+          current_prob.node.childs[i]->b_value = integral;
+          active_problems.emplace(ExploreNode(opt_sol.nodes, current_bounds,
+                                              *current_prob.node.childs[i]));
         }
       }
     }
     current_prob.node.explored = true;
   }
-  std::cout << opt_sol.value << std::endl;
   // in case the loop is stopped, active_problems could contains subproblems to
   // explore
   opt_sol.success = active_problems.empty() &&
