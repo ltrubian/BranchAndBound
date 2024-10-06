@@ -2,7 +2,8 @@
 #define __KNAPSACKS__
 
 #include <limits>
-#include <memory>
+#include <set>
+#include <stdexcept>
 #include <vector>
 
 struct OptimalSolution {
@@ -27,34 +28,65 @@ struct Bounds {
   explicit Bounds(std::size_t n)
       : Bounds(n, -std::numeric_limits<float>::infinity(),
                std::numeric_limits<float>::infinity()){};
+  std::vector<float> &operator[](std::size_t i) {
+    switch (i) {
+    case 0:
+      return upper;
+    case 1:
+      return lower;
+    default:
+      throw std::out_of_range("only 0: upper, 1:lower bounds available");
+    }
+  };
+  const std::vector<float> &operator[](std::size_t i) const {
+    switch (i) {
+    case 0:
+      return upper;
+    case 1:
+      return lower;
+    default:
+      throw std::out_of_range("only 0: upper, 1:lower bounds available");
+    }
+  };
 };
 
 struct Node {
   float value;
   std::size_t b_index;
   float b_value; // for the knapsack it is always 0, but it is not so in general
-  Bounds bounds;
-  Node *left, *right;
+  bool integrality;
+  bool explored;
+  Node *childs[2];
 
   Node()
       : value(-std::numeric_limits<float>::infinity()), b_index{0},
-        b_value{0.f}, left{nullptr}, right{nullptr} {};
-  Node(float value, std::size_t b_index, float b_value, Bounds bounds)
-      : value{value}, b_index{b_index}, b_value{b_value}, bounds{std::move(
-                                                              bounds)} {};
-
-  ~Node() {
-    if (this->left != nullptr) {
-      this->left->~Node();
-    }
-    if (this->right != nullptr) {
-      this->right->~Node();
-    }
-  };
-
-  bool operator<(const Node &other) const { return this->value < other.value; };
-  bool operator>(const Node &other) const { return !(*this < other); };
+        b_value{0.f}, integrality{false}, explored{false},
+        childs{nullptr, nullptr} {};
+  Node(float value) : Node() { this->value = value; };
+  ~Node(){};
 };
+
+struct ExploreNode {
+  std::size_t node_id;
+  float value;
+  Bounds bounds;
+  Node &node;
+
+  ExploreNode(std::size_t id, Bounds &bounds, Node &node)
+      : node_id(id), value(node.value), bounds(bounds), node(node){};
+};
+struct DepthFirst {
+  constexpr bool operator()(const ExploreNode &a, const ExploreNode &b) const {
+    return a.node_id > b.node_id;
+  };
+};
+struct BestBoundFirst {
+  constexpr bool operator()(const ExploreNode &a, const ExploreNode &b) const {
+    return (a.value > b.value) || (a.value == b.value && a.node_id > b.node_id);
+  }
+};
+void prune_unitll(std::set<ExploreNode> &queue, float value);
+void prune_all(std::set<ExploreNode> &queue, float value);
 
 /**
  * My class of the Knapsack problem

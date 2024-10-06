@@ -104,9 +104,9 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds,
                                              OptimalSolution opt) const {
   OptimalSolution opt_sol;
 
-  std::priority_queue<Node> active_problems;
+  std::set<ExploreNode, BestBoundFirst> active_problems;
 
-  Node *root;
+  Node root;
 
   OptimalSolution current_sol{this->solve_relaxed(bounds)};
 
@@ -127,29 +127,24 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds,
       opt_sol.value = current_sol.value;
       opt_sol.solution = current_sol.solution;
     } else {
-      root->b_index = index;
-      root->b_value = integral;
-      root->value = current_sol.value;
-      root->bounds = std::move(bounds);
-      active_problems.emplace(*root);
+      root.b_index = index;
+      root.b_value = integral;
+      root.value = current_sol.value;
+      active_problems.emplace(ExploreNode(0, bounds, root));
     }
   }
-  Node *tmp;
   while (!active_problems.empty()) {
-    ++opt_sol.nodes;
-    auto current_prob = active_problems.top();
-    active_problems.pop();
+    ExploreNode current_prob =
+        std::move(active_problems.extract(active_problems.cbegin()).value());
 
     for (auto i{0}; i < 2; ++i) {
       Bounds current_bounds{current_prob.bounds};
-      if (i == 0) {
-        current_bounds.upper[current_prob.b_index] = current_prob.b_value;
-      } else {
-        current_bounds.lower[current_prob.b_index] = current_prob.b_value + 1.f;
-      }
+      current_bounds[i][current_prob.node.b_index] =
+          current_prob.node.b_value + 1.f * i;
 
       // solve the relaxed problem
       OptimalSolution current_sol{this->solve_relaxed(current_bounds)};
+      ++opt_sol.nodes;
       if (current_sol.success && opt_sol.value < current_sol.value) {
         // search for the first non integer value of the solution
         float integral{0.f}, fractional{0.f};
@@ -161,20 +156,21 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds,
             break;
           }
         }
+        Node *kid = new Node(opt_sol.value);
+        current_prob.node.childs[i] = kid;
         if (fractional == 0.f) {
           opt_sol.value = current_sol.value;
           opt_sol.solution = current_sol.solution;
+          kid->integrality = true;
         } else {
-          *tmp = Node(opt_sol.value, index, integral, current_bounds);
-          if (i == 0) {
-            current_prob.left = tmp;
-          } else {
-            current_prob.right = tmp;
-          }
-          active_problems.emplace(*tmp);
+          kid->b_index = index;
+          kid->b_value = integral;
+          active_problems.emplace(
+              ExploreNode(opt_sol.nodes, current_bounds, *kid));
         }
       }
     }
+    current_prob.node.explored = true;
   }
   std::cout << opt_sol.value << std::endl;
   // in case the loop is stopped, active_problems could contains subproblems to
