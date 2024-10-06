@@ -78,16 +78,18 @@ struct ExploreNode {
 };
 struct DepthFirst {
   constexpr bool operator()(const ExploreNode &a, const ExploreNode &b) const {
-    return a.node_id > b.node_id;
+    return a.node_id < b.node_id;
   };
 };
 struct BestBoundFirst {
   constexpr bool operator()(const ExploreNode &a, const ExploreNode &b) const {
-    return (a.value > b.value) || (a.value == b.value && a.node_id > b.node_id);
+    return (a.value < b.value) || (a.value == b.value && a.node_id < b.node_id);
   }
 };
-void prune_unitll(std::set<ExploreNode> &queue, float value);
-void prune_all(std::set<ExploreNode> &queue, float value);
+template <class T>
+void prune_untill(std::set<ExploreNode, T> &queue, float value);
+
+template <class T> void prune_all(T &queue, const float value);
 
 /**
  * My class of the Knapsack problem

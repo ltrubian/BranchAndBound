@@ -3,15 +3,11 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <functional>
-#include <iostream>
 #include <iterator>
 #include <memory>
 #include <numeric>
-#include <queue>
 #include <random>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -100,11 +96,29 @@ const float Knapsack::objective(const std::vector<float> &solution) const {
   return res;
 }
 
+template <class T> void prune_all(T &queue, const float value) {
+  for (auto i{queue.begin()}; i != queue.end();) {
+    if (i->value <= value) {
+      i = queue.erase(i);
+    } else {
+      ++i;
+    }
+  }
+}
+
+template <class T>
+void prune_untill(std::set<ExploreNode, T> &queue, const float value) {
+  auto i{queue.begin()};
+  while (i->value <= value) {
+    i = queue.erase(i);
+  }
+}
+
 const OptimalSolution Knapsack::branch_bound(Bounds &bounds,
                                              OptimalSolution opt) const {
   OptimalSolution opt_sol;
 
-  std::set<ExploreNode, DepthFirst> active_problems;
+  std::set<ExploreNode, BestBoundFirst> active_problems;
 
   Node root;
 
@@ -121,6 +135,7 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds,
         break;
       }
     }
+    root.value = current_sol.value;
     // second bound: if the solution is integer, that is the best solution for
     // the entire tree of its subproblem
     if (fractional == 0.f) {
@@ -161,6 +176,7 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds,
           opt_sol.value = current_sol.value;
           opt_sol.solution = current_sol.solution;
           current_prob.node.childs[i]->integrality = true;
+          prune_all(active_problems, opt_sol.value);
         } else {
           current_prob.node.childs[i]->b_index = index;
           current_prob.node.childs[i]->b_value = integral;
@@ -171,8 +187,8 @@ const OptimalSolution Knapsack::branch_bound(Bounds &bounds,
     }
     current_prob.node.explored = true;
   }
-  // in case the loop is stopped, active_problems could contains subproblems to
-  // explore
+  // in case the loop is stopped, active_problems could contains subproblems
+  // to explore
   opt_sol.success = active_problems.empty() &&
                     opt_sol.value != -std::numeric_limits<float>::infinity();
   return opt_sol;
