@@ -3,26 +3,9 @@
 #include <cmath>
 #include <set>
 
-template <class T> void prune_all(T &queue, const float value) {
-  for (auto i{queue.begin()}; i != queue.end();) {
-    if (i->value <= value) {
-      i = queue.erase(i);
-    } else {
-      ++i;
-    }
-  }
-}
-
-template <class T> void prune_untill(T &queue, const float value) {
-  auto i{queue.begin()};
-  while (i != queue.end() && i->value <= value) {
-    i = queue.erase(i);
-  }
-}
-
-template <typename T, typename B>
+template <typename T, typename B, typename Prune>
 const OptimalSolution branch_bound(const T &problem, Bounds &bounds,
-                                   OptimalSolution opt) {
+                                   OptimalSolution opt = OptimalSolution()) {
   OptimalSolution opt_sol;
 
   std::set<ExploreNode, B> active_problems;
@@ -83,7 +66,7 @@ const OptimalSolution branch_bound(const T &problem, Bounds &bounds,
           opt_sol.value = current_sol.value;
           opt_sol.solution = current_sol.solution;
           current_prob.node.childs[i]->integrality = true;
-          prune_all(active_problems, opt_sol.value);
+          Prune(active_problems, opt_sol.value);
         } else {
           current_prob.node.childs[i]->b_index = index;
           current_prob.node.childs[i]->b_value = integral;
@@ -100,7 +83,3 @@ const OptimalSolution branch_bound(const T &problem, Bounds &bounds,
                     opt_sol.value != -std::numeric_limits<float>::infinity();
   return opt_sol;
 }
-
-template <typename T>
-const OptimalSolution branch_bound<DepthFirst>(const T &problem, Bounds &bounds,
-                                               OptimalSolution opt);

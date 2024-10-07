@@ -98,6 +98,5 @@ const float Knapsack::objective(const std::vector<float> &solution) const {
 }
 
 template <>
-const OptimalSolution
-branch_bound<Knapsack, DepthFirst>(const Knapsack &problem, Bounds &bounds,
-                                   OptimalSolution opt);
+const OptimalSolution branch_bound<Knapsack, DepthFirst, PruneAll>(
+    const Knapsack &problem, Bounds &bounds, OptimalSolution opt);

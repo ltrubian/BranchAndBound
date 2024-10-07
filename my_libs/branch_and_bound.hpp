@@ -50,9 +50,6 @@ struct Bounds {
   };
 };
 
-template <typename T, typename B>
-const OptimalSolution branch_bound(const T &problem, Bounds &bounds,
-                                   OptimalSolution opt = OptimalSolution());
 struct Node {
   float value;
   std::size_t b_index;
@@ -88,9 +85,32 @@ struct BestBoundFirst {
     return (a.value > b.value) || (a.value == b.value && a.node_id > b.node_id);
   }
 };
+template <typename T> struct PruneAll {
+  constexpr void operator()(T &queue, const float value) {
+    for (auto i{queue.begin()}; i != queue.end();) {
+      if (i->value <= value) {
+        i = queue.erase(i);
+      } else {
+        ++i;
+      }
+    }
+  }
+};
 
-template <class T> void prune_all(T &queue, const float value);
+template <typename T> struct PruneUntill {
+  constexpr void operator()(T &queue, const float value) {
+    auto i{queue.begin()};
+    while (i != queue.end() && i->value <= value) {
+      i = queue.erase(i);
+    }
+  }
+};
+template <typename T> struct PruneNone {
+  constexpr void operator()(T &queue, const float value) {}
+};
 
-template <class T> void prune_untill(T &queue, const float value);
+// template <class T> void prune_all(T &queue, const float value);
+
+// template <class T> void prune_untillv(T &queue, const float value);
 
 #endif // __BRANCH_BOUND__LT

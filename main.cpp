@@ -35,7 +35,8 @@ int main() {
   Bounds real(n, 0.f, 1.f);
   Knapsack prob{5, 20.f, n, s_k};
   KnapsackHighs prob_h{prob};
-  OptimalSolution opt{branch_bound<Knapsack, DepthFirst>(prob, real)};
+  OptimalSolution opt{
+      branch_bound<Knapsack, DepthFirst, prune_all>(prob, real)};
   std::cout << "seed \t\t\t n  \tS \tnodes \tvalue" << std::endl;
   std::cout << s_k << "\t" << n << "\t" << opt.success << "\t" << opt.nodes
             << "\t" << opt.value;
