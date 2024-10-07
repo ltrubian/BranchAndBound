@@ -32,14 +32,18 @@ int main() {
   std::uniform_int_distribution<std::size_t> di(0);
   std::size_t n{100};
   std::size_t s_k{di(rd)};
-  s_k = 8722141901008443932;
+  // s_k = 8722141901008443932;
   // s_k = 3178488925260001586;
+  // s_k = 1104010588739253986;
+  // s_k = 12968802468751711930;
+  // s_k = 13607581404834641350;
+  // s_k = 12696456601695067945;
   std::cout << "seed:\t" << s_k << std::endl;
   Bounds real(n, 0.f, 1.f);
   Knapsack prob{5, 20.f, n, s_k};
   KnapsackHighs prob_h{prob};
-  OptimalSolution opt{
-      branch_bound<Knapsack, DepthFirst, PruneNone>(prob, real)};
+  OptimalSolution opt;
+  opt = branch_bound<Knapsack, DepthFirst, PruneNone>(prob, real);
   std::cout << "n  \tS \tnodes \tvalue\t type" << std::endl;
   std::cout << n << "\t" << opt.success << "\t" << opt.nodes << "\t"
             << opt.value << "\t" << typeid(PruneNone<DepthFirst>).name()
@@ -65,7 +69,7 @@ int main() {
             << opt.value << "\t" << typeid(PruneUntill<BestBoundFirst>).name()
             << std::endl;
   std::cout << "highs" << std::endl;
-  opt = prob_h.solve_integer((real));
+  // opt = prob_h.solve_integer((real));
   std::cout << "seed \t\t\t n  \tS \tnodes \tvalue" << std::endl;
   std::cout << s_k << "\t" << n << "\t" << opt.success << "\t" << opt.nodes
             << "\t" << opt.value;

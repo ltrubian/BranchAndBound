@@ -1,6 +1,7 @@
 #ifndef __UTILITIES__LT
 #define __UTILITIES__LT
 
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <ostream>
@@ -79,12 +80,12 @@ struct ExploreNode {
 };
 struct DepthFirst {
   constexpr bool operator()(const ExploreNode &a, const ExploreNode &b) const {
-    return a.node_id > b.node_id;
+    return a.node_id < b.node_id;
   };
 };
 struct BestBoundFirst {
   constexpr bool operator()(const ExploreNode &a, const ExploreNode &b) const {
-    return (a.value > b.value) || (a.value == b.value && a.node_id > b.node_id);
+    return (a.value < b.value) || (a.value == b.value && a.node_id > b.node_id);
   }
 };
 template <typename T> struct PruneAll {
@@ -103,7 +104,8 @@ template <typename T> struct PruneUntill {
   constexpr void operator()(T &queue, const float value) {
     auto i{queue.begin()};
     while (i != queue.end() && i->value <= value) {
-      i = queue.erase(i);
+      i = queue.erase(i); //.base();
+      // i = std::make_reverse_iterator(x++);
     }
   }
 };

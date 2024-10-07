@@ -3,6 +3,7 @@
 
 #include "utilities.hpp"
 #include <cmath>
+#include <memory>
 #include <set>
 
 template <typename T, typename Order, template <typename> typename Prune>
@@ -12,7 +13,7 @@ const OptimalSolution branch_bound(const T &problem, Bounds &bounds,
 
   std::set<ExploreNode, Order> active_problems;
 
-  Node root;
+  std::unique_ptr<Node> root{new Node()};
 
   OptimalSolution current_sol{problem.solve_relaxed(bounds)};
 
@@ -27,22 +28,22 @@ const OptimalSolution branch_bound(const T &problem, Bounds &bounds,
         break;
       }
     }
-    root.value = current_sol.value;
+    root->value = current_sol.value;
     // second bound: if the solution is integer, that is the best solution for
     // the entire tree of its subproblem
     if (fractional == 0.f) {
       opt_sol.value = current_sol.value;
       opt_sol.solution = current_sol.solution;
     } else {
-      root.b_index = index;
-      root.b_value = integral;
-      root.value = current_sol.value;
-      active_problems.emplace(ExploreNode(0, bounds, root));
+      root->b_index = index;
+      root->b_value = integral;
+      root->value = current_sol.value;
+      active_problems.emplace(ExploreNode(0, bounds, *root));
     }
   }
   while (!active_problems.empty()) {
     ExploreNode current_prob =
-        std::move(active_problems.extract(active_problems.cbegin()).value());
+        std::move(active_problems.extract(--active_problems.end()).value());
 
     for (auto i{0}; i < 2; ++i) {
       Bounds current_bounds{current_prob.bounds};
