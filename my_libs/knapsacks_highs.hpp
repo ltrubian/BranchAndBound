@@ -2,17 +2,22 @@
 #define __KNAPSACKS__HIGHS__
 
 #include "Highs.h"
+#include "branch_and_bound.hpp"
 #include "knapsacks.hpp"
 #include <valarray>
 
 /**
  * Class of the Knapsack problem, interface for HiGHS
  */
-struct KnapsackHighs : Knapsack {
+struct KnapsackHighs {
+  std::vector<float> prices;
+  std::vector<float> weights;
+  float capacity;
   HighsModel problem;
 
-  KnapsackHighs(const Knapsack &model)
-      : Knapsack(model), problem{HighsModel()} {};
+  explicit KnapsackHighs(const Knapsack &model)
+      : prices(model.prices), weights(model.weights),
+        capacity(model.capacity), problem{HighsModel()} {};
 
   /**
    * This method is called in the branch_bound template function.
@@ -34,6 +39,8 @@ struct KnapsackHighs : Knapsack {
    */
   const OptimalSolution highs_solver(const Bounds &bounds,
                                      bool integrality) const;
+
+  const float objective(const std::vector<float> &solution) const;
 };
 
 #endif // __KNAPSACKS__HIGHS__

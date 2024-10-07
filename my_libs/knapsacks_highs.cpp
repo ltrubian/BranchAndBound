@@ -63,3 +63,14 @@ const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
   }
   return opt_sol;
 }
+
+const float KnapsackHighs::objective(const std::vector<float> &solution) const {
+  float res{0.0};
+  auto sol{std::begin(solution)};
+  for (auto price{std::begin(this->prices)}; price != std::end(this->prices);
+       ++price) {
+    res = std::move(res) + *price * *sol;
+    ++sol;
+  }
+  return res;
+}
