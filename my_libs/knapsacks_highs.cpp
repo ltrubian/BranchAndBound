@@ -1,5 +1,6 @@
 #include "knapsacks_highs.hpp"
 #include "Highs.h"
+#include "branch_and_bound.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <lp_data/HConst.h>
@@ -74,3 +75,27 @@ const float KnapsackHighs::objective(const std::vector<float> &solution) const {
   }
   return res;
 }
+
+template <>
+const OptimalSolution
+branch_bound<KnapsackHighs, DepthFirst, PruneNone>(const KnapsackHighs &,
+                                                   Bounds &, OptimalSolution);
+
+template <>
+const OptimalSolution
+branch_bound<KnapsackHighs, DepthFirst, PruneUntill>(const KnapsackHighs &,
+                                                     Bounds &, OptimalSolution);
+template <>
+const OptimalSolution
+branch_bound<KnapsackHighs, DepthFirst, PruneAll>(const KnapsackHighs &,
+                                                  Bounds &, OptimalSolution);
+template <>
+const OptimalSolution branch_bound<KnapsackHighs, BestBoundFirst, PruneNone>(
+    const KnapsackHighs &, Bounds &, OptimalSolution);
+
+template <>
+const OptimalSolution branch_bound<KnapsackHighs, BestBoundFirst, PruneUntill>(
+    const KnapsackHighs &, Bounds &, OptimalSolution);
+template <>
+const OptimalSolution branch_bound<KnapsackHighs, BestBoundFirst, PruneAll>(
+    const KnapsackHighs &, Bounds &, OptimalSolution);

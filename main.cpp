@@ -1,6 +1,7 @@
 #include "branch_and_bound.hpp"
 #include "knapsacks.hpp"
 #include "knapsacks_highs.hpp"
+#include "utilities.hpp"
 #include <cmath>
 #include <forward_list>
 #include <iostream>
@@ -32,15 +33,38 @@ int main() {
   std::size_t n{100};
   std::size_t s_k{di(rd)};
   s_k = 8722141901008443932;
+  // s_k = 3178488925260001586;
+  std::cout << "seed:\t" << s_k << std::endl;
   Bounds real(n, 0.f, 1.f);
   Knapsack prob{5, 20.f, n, s_k};
   KnapsackHighs prob_h{prob};
   OptimalSolution opt{
-      branch_bound<Knapsack, DepthFirst, prune_all>(prob, real)};
-  std::cout << "seed \t\t\t n  \tS \tnodes \tvalue" << std::endl;
-  std::cout << s_k << "\t" << n << "\t" << opt.success << "\t" << opt.nodes
-            << "\t" << opt.value;
-  std::cout << std::endl;
+      branch_bound<Knapsack, DepthFirst, PruneNone>(prob, real)};
+  std::cout << "n  \tS \tnodes \tvalue\t type" << std::endl;
+  std::cout << n << "\t" << opt.success << "\t" << opt.nodes << "\t"
+            << opt.value << "\t" << typeid(PruneNone<DepthFirst>).name()
+            << std::endl;
+  opt = branch_bound<Knapsack, DepthFirst, PruneAll>(prob, real);
+  std::cout << n << "\t" << opt.success << "\t" << opt.nodes << "\t"
+            << opt.value << "\t" << typeid(PruneAll<DepthFirst>).name()
+            << std::endl;
+  opt = branch_bound<Knapsack, DepthFirst, PruneUntill>(prob, real);
+  std::cout << n << "\t" << opt.success << "\t" << opt.nodes << "\t"
+            << opt.value << "\t" << typeid(PruneUntill<DepthFirst>).name()
+            << std::endl;
+  opt = branch_bound<Knapsack, BestBoundFirst, PruneNone>(prob, real);
+  std::cout << n << "\t" << opt.success << "\t" << opt.nodes << "\t"
+            << opt.value << "\t" << typeid(PruneNone<BestBoundFirst>).name()
+            << std::endl;
+  opt = branch_bound<Knapsack, BestBoundFirst, PruneAll>(prob, real);
+  std::cout << n << "\t" << opt.success << "\t" << opt.nodes << "\t"
+            << opt.value << "\t" << typeid(PruneAll<BestBoundFirst>).name()
+            << std::endl;
+  opt = branch_bound<Knapsack, BestBoundFirst, PruneUntill>(prob, real);
+  std::cout << n << "\t" << opt.success << "\t" << opt.nodes << "\t"
+            << opt.value << "\t" << typeid(PruneUntill<BestBoundFirst>).name()
+            << std::endl;
+  std::cout << "highs" << std::endl;
   opt = prob_h.solve_integer((real));
   std::cout << "seed \t\t\t n  \tS \tnodes \tvalue" << std::endl;
   std::cout << s_k << "\t" << n << "\t" << opt.success << "\t" << opt.nodes

@@ -1,7 +1,7 @@
 #ifndef __KNAPSACKS__
 #define __KNAPSACKS__
 
-#include "branch_and_bound.hpp"
+#include "utilities.hpp"
 #include <vector>
 
 /**

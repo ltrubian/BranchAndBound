@@ -2,8 +2,8 @@
 #define __KNAPSACKS__HIGHS__
 
 #include "Highs.h"
-#include "branch_and_bound.hpp"
 #include "knapsacks.hpp"
+#include "utilities.hpp"
 #include <valarray>
 
 /**

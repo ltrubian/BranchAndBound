@@ -1,116 +1,88 @@
 #ifndef __BRANCH_BOUND__LT
 #define __BRANCH_BOUND__LT
 
-#include <limits>
-#include <memory>
-#include <stdexcept>
-#include <vector>
+#include "utilities.hpp"
+#include <cmath>
+#include <set>
 
-struct OptimalSolution {
-  bool success;
-  std::size_t nodes;
-  float value;
-  std::vector<float> solution;
+template <typename T, typename Order, template <typename> typename Prune>
+const OptimalSolution branch_bound(const T &problem, Bounds &bounds,
+                                   OptimalSolution opt = OptimalSolution()) {
+  OptimalSolution opt_sol;
 
-  OptimalSolution()
-      : success{false}, nodes{0},
-        value{-std::numeric_limits<float>::infinity()},
-        solution{std::vector<float>()} {};
-};
+  std::set<ExploreNode, Order> active_problems;
 
-struct Bounds {
-  std::vector<float> lower;
-  std::vector<float> upper;
+  Node root;
 
-  Bounds() : lower{std::vector<float>()}, upper{std::vector<float>()} {};
-  Bounds(std::size_t n, float low, float up)
-      : lower{std::vector<float>(n, low)}, upper{std::vector<float>(n, up)} {};
-  explicit Bounds(std::size_t n)
-      : Bounds(n, -std::numeric_limits<float>::infinity(),
-               std::numeric_limits<float>::infinity()){};
-  std::vector<float> &operator[](std::size_t i) {
-    switch (i) {
-    case 0:
-      return upper;
-    case 1:
-      return lower;
-    default:
-      throw std::out_of_range("only 0: upper, 1:lower bounds available");
-    }
-  };
-  const std::vector<float> &operator[](std::size_t i) const {
-    switch (i) {
-    case 0:
-      return upper;
-    case 1:
-      return lower;
-    default:
-      throw std::out_of_range("only 0: upper, 1:lower bounds available");
-    }
-  };
-};
+  OptimalSolution current_sol{problem.solve_relaxed(bounds)};
 
-struct Node {
-  float value;
-  std::size_t b_index;
-  float b_value; // for the knapsack it is always 0, but it is not so in general
-  bool integrality;
-  bool explored;
-  std::unique_ptr<Node> childs[2];
-
-  Node()
-      : value(-std::numeric_limits<float>::infinity()), b_index{0},
-        b_value{0.f}, integrality{false}, explored{false}, childs{nullptr,
-                                                                  nullptr} {};
-  Node(float value) : Node() { this->value = value; };
-  ~Node(){};
-};
-
-struct ExploreNode {
-  std::size_t node_id;
-  float value;
-  Bounds bounds;
-  Node &node;
-
-  ExploreNode(std::size_t id, Bounds &bounds, Node &node)
-      : node_id(id), value(node.value), bounds(bounds), node(node){};
-};
-struct DepthFirst {
-  constexpr bool operator()(const ExploreNode &a, const ExploreNode &b) const {
-    return a.node_id > b.node_id;
-  };
-};
-struct BestBoundFirst {
-  constexpr bool operator()(const ExploreNode &a, const ExploreNode &b) const {
-    return (a.value > b.value) || (a.value == b.value && a.node_id > b.node_id);
-  }
-};
-template <typename T> struct PruneAll {
-  constexpr void operator()(T &queue, const float value) {
-    for (auto i{queue.begin()}; i != queue.end();) {
-      if (i->value <= value) {
-        i = queue.erase(i);
-      } else {
-        ++i;
+  if (current_sol.success && opt_sol.value < current_sol.value) {
+    // search for the first non integer value of the solution
+    float integral{0.f}, fractional{0.f};
+    auto index{0};
+    for (auto &x : current_sol.solution) {
+      fractional = std::modf(x, &integral);
+      if (fractional != 0.f) {
+        index = &x - &current_sol.solution[0];
+        break;
       }
     }
-  }
-};
-
-template <typename T> struct PruneUntill {
-  constexpr void operator()(T &queue, const float value) {
-    auto i{queue.begin()};
-    while (i != queue.end() && i->value <= value) {
-      i = queue.erase(i);
+    root.value = current_sol.value;
+    // second bound: if the solution is integer, that is the best solution for
+    // the entire tree of its subproblem
+    if (fractional == 0.f) {
+      opt_sol.value = current_sol.value;
+      opt_sol.solution = current_sol.solution;
+    } else {
+      root.b_index = index;
+      root.b_value = integral;
+      root.value = current_sol.value;
+      active_problems.emplace(ExploreNode(0, bounds, root));
     }
   }
-};
-template <typename T> struct PruneNone {
-  constexpr void operator()(T &queue, const float value) {}
-};
+  while (!active_problems.empty()) {
+    ExploreNode current_prob =
+        std::move(active_problems.extract(active_problems.cbegin()).value());
 
-// template <class T> void prune_all(T &queue, const float value);
+    for (auto i{0}; i < 2; ++i) {
+      Bounds current_bounds{current_prob.bounds};
+      current_bounds[i][current_prob.node.b_index] =
+          current_prob.node.b_value + 1.f * i;
 
-// template <class T> void prune_untillv(T &queue, const float value);
-
+      // solve the relaxed problem
+      OptimalSolution current_sol{problem.solve_relaxed(current_bounds)};
+      ++opt_sol.nodes;
+      if (current_sol.success && opt_sol.value < current_sol.value) {
+        // search for the first non integer value of the solution
+        float integral{0.f}, fractional{0.f};
+        auto index{0};
+        for (auto &x : current_sol.solution) {
+          fractional = std::modf(x, &integral);
+          if (fractional != 0.f) {
+            index = &x - &current_sol.solution[0];
+            break;
+          }
+        }
+        current_prob.node.childs[i].reset(new Node(current_sol.value));
+        if (fractional == 0.f) {
+          opt_sol.value = current_sol.value;
+          opt_sol.solution = current_sol.solution;
+          current_prob.node.childs[i]->integrality = true;
+          Prune<std::set<ExploreNode, Order>>()(active_problems, opt_sol.value);
+        } else {
+          current_prob.node.childs[i]->b_index = index;
+          current_prob.node.childs[i]->b_value = integral;
+          active_problems.emplace(ExploreNode(opt_sol.nodes, current_bounds,
+                                              *current_prob.node.childs[i]));
+        }
+      }
+    }
+    current_prob.node.explored = true;
+  }
+  // in case the loop is stopped, active_problems could contains subproblems
+  // to explore
+  opt_sol.success = active_problems.empty() &&
+                    opt_sol.value != -std::numeric_limits<float>::infinity();
+  return opt_sol;
+}
 #endif // __BRANCH_BOUND__LT

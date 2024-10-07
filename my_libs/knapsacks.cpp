@@ -1,5 +1,6 @@
 #include "knapsacks.hpp"
 #include "branch_and_bound.hpp"
+#include "utilities.hpp"
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -98,5 +99,28 @@ const float Knapsack::objective(const std::vector<float> &solution) const {
 }
 
 template <>
-const OptimalSolution branch_bound<Knapsack, DepthFirst, PruneAll>(
-    const Knapsack &problem, Bounds &bounds, OptimalSolution opt);
+const OptimalSolution
+branch_bound<Knapsack, DepthFirst, PruneNone>(const Knapsack &, Bounds &,
+                                              OptimalSolution);
+
+template <>
+const OptimalSolution
+branch_bound<Knapsack, DepthFirst, PruneUntill>(const Knapsack &, Bounds &,
+                                                OptimalSolution);
+template <>
+const OptimalSolution
+branch_bound<Knapsack, DepthFirst, PruneAll>(const Knapsack &, Bounds &,
+                                             OptimalSolution);
+template <>
+const OptimalSolution
+branch_bound<Knapsack, BestBoundFirst, PruneNone>(const Knapsack &, Bounds &,
+                                                  OptimalSolution);
+
+template <>
+const OptimalSolution
+branch_bound<Knapsack, BestBoundFirst, PruneUntill>(const Knapsack &, Bounds &,
+                                                    OptimalSolution);
+template <>
+const OptimalSolution
+branch_bound<Knapsack, BestBoundFirst, PruneAll>(const Knapsack &, Bounds &,
+                                                 OptimalSolution);
