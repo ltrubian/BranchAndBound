@@ -34,10 +34,12 @@ int main() {
   std::size_t s_k{di(rd)};
   // s_k = 8722141901008443932;
   // s_k = 3178488925260001586;
-  // s_k = 1104010588739253986;
+  s_k = 1104010588739253986;
   // s_k = 12968802468751711930;
   // s_k = 13607581404834641350;
   // s_k = 12696456601695067945;
+  // s_k = 1409891033439146690; // n = 300; ha oltre 3 milioni di nodi, circa 24
+  // secodi
   std::cout << "seed:\t" << s_k << std::endl;
   Bounds real(n, 0.f, 1.f);
   Knapsack prob{5, 20.f, n, s_k};
