@@ -5,6 +5,9 @@
 #include <cmath>
 #include <memory>
 #include <set>
+/**
+ * Aim:
+ */
 template <typename T, typename Order, template <typename> typename Prune>
 const void core_solve_choose(const T &problem, Bounds &bounds,
                              OptimalSolution &opt, std::unique_ptr<Node> &node,
@@ -51,7 +54,7 @@ const void core_solve_choose(const T &problem, Bounds &bounds,
                              OptimalSolution &opt, std::unique_ptr<Node> &node,
                              std::set<ExploreNode, Order> &subproblems) {
   OptimalSolution current_sol{problem.solve_relaxed(bounds)};
-
+  node.reset(new Node(current_sol.value));
   if (current_sol.success && opt.value < current_sol.value) {
     // search for the first non integer value of the solution
     float integral{0.f}, fractional{0.f};
@@ -63,7 +66,7 @@ const void core_solve_choose(const T &problem, Bounds &bounds,
         break;
       }
     }
-    node.reset(new Node(current_sol.value));
+
     if (fractional == 0.f) {
       opt.value = current_sol.value;
       opt.solution = current_sol.solution;

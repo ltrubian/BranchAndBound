@@ -3,12 +3,9 @@
 #include "knapsacks.hpp"
 #include "knapsacks_highs.hpp"
 #include "utilities.hpp"
-#include <algorithm>
 #include <cstddef>
-#include <iterator>
 #include <random>
 #include <stdexcept>
-#include <tuple>
 
 static float TOL{1e-3};
 
@@ -90,49 +87,7 @@ TEST_CASE("knapsack: relaxed solver") {
     REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
   }
 }
-/*
-TEST_CASE("knapsack: branch and bound") {
-  std::size_t v{5};
-  float m{20.f};
-  std::size_t n = GENERATE(range(10, 30, 10));
-  SECTION("default bounds, fixed problems") {
-    std::size_t seed = GENERATE(range(0, 10, 1));
-    Knapsack problem{v, m, n, seed};
-    KnapsackHighs problem_highs(problem);
-    Bounds bounds{n, 0.f, 1.f};
-    int selection = GENERATE(range(0, 6));
-    auto sol_my{select_solver_variant(problem_highs, bounds, selection)};
-    auto sol_hi{problem_highs.solve_integer(bounds)};
 
-    REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
-  }
-  SECTION("default bounds, random problems") {
-    std::size_t seed = GENERATE(take(5, random(0, 100000)));
-    Knapsack problem{v, m, n, seed};
-    KnapsackHighs problem_highs(problem);
-    Bounds bounds{n, 0.f, 1.f};
-    int selection = GENERATE(range(0, 6));
-    auto sol_my{select_solver_variant(problem_highs, bounds, selection)};
-    auto sol_hi{problem_highs.solve_integer(bounds)};
-
-    REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
-  }
-  SECTION("random bounds") {
-    std::size_t seed = GENERATE(take(5, random(0, 100000)));
-    Knapsack problem{v, m, n, seed};
-    KnapsackHighs problem_highs(problem);
-    Bounds bounds{random_bounds(n, seed)};
-    int selection = GENERATE(range(0, 6));
-    auto sol_my{select_solver_variant(problem_highs, bounds, selection)};
-    auto sol_hi{problem_highs.solve_integer(bounds)};
-
-    REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
-  }
-}
-*/
 TEST_CASE("knapsack: all assembled") {
   std::size_t v{5};
   float m{20.f};

@@ -1,11 +1,8 @@
 #ifndef __UTILITIES__LT
 #define __UTILITIES__LT
 
-#include <iterator>
 #include <limits>
 #include <memory>
-#include <ostream>
-#include <set>
 #include <stdexcept>
 #include <vector>
 
@@ -63,8 +60,8 @@ struct Node {
 
   Node()
       : value(-std::numeric_limits<float>::infinity()), b_index{0},
-        b_value{0.f}, integrality{false}, explored{false}, childs{nullptr,
-                                                                  nullptr} {};
+        b_value{0.f}, integrality{false}, explored{false},
+        childs{nullptr, nullptr} {};
   Node(float value) : Node() { this->value = value; };
   ~Node(){};
 };
@@ -104,13 +101,12 @@ template <typename T> struct PruneUntill {
   constexpr void operator()(T &queue, const float value) {
     auto i{queue.begin()};
     while (i != queue.end() && i->value <= value) {
-      i = queue.erase(i); //.base();
-      // i = std::make_reverse_iterator(x++);
+      i = queue.erase(i);
     }
   }
 };
 template <typename T> struct PruneNone {
-  constexpr void operator()(T &queue, const float value){};
+  constexpr void operator()(T &queue, const float value) {};
 };
 
 #endif // __UTILITIES__LT

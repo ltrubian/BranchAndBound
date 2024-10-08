@@ -4,7 +4,6 @@
 #include "Highs.h"
 #include "knapsacks.hpp"
 #include "utilities.hpp"
-#include <valarray>
 
 /**
  * Class of the Knapsack problem, interface for HiGHS
@@ -16,8 +15,8 @@ struct KnapsackHighs {
   HighsModel problem;
 
   explicit KnapsackHighs(const Knapsack &model)
-      : prices(model.prices), weights(model.weights),
-        capacity(model.capacity), problem{HighsModel()} {};
+      : prices(model.prices), weights(model.weights), capacity(model.capacity),
+        problem{HighsModel()} {};
 
   /**
    * This method is called in the branch_bound template function.
