@@ -2,6 +2,8 @@
 #define __KNAPSACKS__
 
 #include "utilities.hpp"
+#include <iostream>
+#include <istream>
 #include <vector>
 
 /**
@@ -26,6 +28,24 @@ struct Knapsack {
   const float objective(const std::vector<float> &solution) const;
 };
 
+std::ostream &operator<<(std::ostream &os, Knapsack &item) {
+  os << item.prices.size() << " " << item.capacity << "\n";
+  for (auto i{0}; i < item.prices.size(); ++i) {
+    os << item.prices[i] << " " << item.weights[i] << "\n";
+  }
+  return os;
+};
+
+std::istream &operator>>(std::istream &is, Knapsack &item) {
+  std::size_t n;
+  is >> n >> item.capacity;
+  item.prices.resize(n);
+  item.weights.resize(n);
+  for (auto i{0}; i < n; ++i) {
+    is >> item.prices[i] >> item.weights[i];
+  }
+  return is;
+};
 // The definitions of the operations between vector (that are element-wise
 // operations) follow the syntax of numpy
 template <typename T> std::vector<T> operator-(T b, const std::vector<T> &a) {

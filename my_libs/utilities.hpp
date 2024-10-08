@@ -1,9 +1,11 @@
 #ifndef __UTILITIES__LT
 #define __UTILITIES__LT
 
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 struct OptimalSolution {
@@ -18,6 +20,22 @@ struct OptimalSolution {
         solution{std::vector<float>()} {};
 };
 
+std::ostream &operator<<(std::ostream &os, OptimalSolution &item) {
+  os << item.value << "\n";
+  for (auto &i : item.solution) {
+    os << i << "\n";
+  }
+  return os;
+};
+
+std::istream &operator>>(std::istream &is, OptimalSolution &item) {
+  is >> item.value;
+  while (is){
+    item.solution.emplace_back(0.f);
+    is >> *--item.solution.end();
+  }
+  return is;
+};
 struct Bounds {
   std::vector<float> lower;
   std::vector<float> upper;

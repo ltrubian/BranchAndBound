@@ -3,7 +3,7 @@
 #include "knapsacks_highs.hpp"
 #include "utilities.hpp"
 #include <cmath>
-#include <forward_list>
+#include <fstream>
 #include <iostream>
 #include <limits>
 #include <random>
@@ -28,6 +28,14 @@ Bounds random_bounds(std::size_t n, std::size_t seed) {
   return bounds;
 };
 int main() {
+  std::string filename = "solution.txt";
+  std::ifstream istrm(filename);
+  OptimalSolution tmp;
+  istrm >> tmp;
+  std::cout << tmp;
+  return 0;
+}
+/*
   std::random_device rd;
   std::uniform_int_distribution<std::size_t> di(0);
   std::size_t n{100};
@@ -71,10 +79,9 @@ int main() {
             << opt.value << "\t" << typeid(PruneUntill<BestBoundFirst>).name()
             << std::endl;
   std::cout << "highs" << std::endl;
-  // opt = prob_h.solve_integer((real));
+  opt = prob_h.solve_integer((real));
   std::cout << "seed \t\t\t n  \tS \tnodes \tvalue" << std::endl;
   std::cout << s_k << "\t" << n << "\t" << opt.success << "\t" << opt.nodes
             << "\t" << opt.value;
   std::cout << std::endl;
-  return 0;
-}
+  */
