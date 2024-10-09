@@ -1,11 +1,12 @@
 #ifndef __UTILITIES__LT
 #define __UTILITIES__LT
 
+#include <bitset>
+#include <string>
 #include <iostream>
 #include <limits>
 #include <memory>
 #include <stdexcept>
-#include <string>
 #include <vector>
 
 struct OptimalSolution {
@@ -20,22 +21,10 @@ struct OptimalSolution {
         solution{std::vector<float>()} {};
 };
 
-std::ostream &operator<<(std::ostream &os, OptimalSolution &item) {
-  os << item.value << "\n";
-  for (auto &i : item.solution) {
-    os << i << "\n";
-  }
-  return os;
-};
+std::ostream &operator<<(std::ostream &os, OptimalSolution &item);
 
-std::istream &operator>>(std::istream &is, OptimalSolution &item) {
-  is >> item.value;
-  while (is){
-    item.solution.emplace_back(0.f);
-    is >> *--item.solution.end();
-  }
-  return is;
-};
+std::istream &operator>>(std::istream &is, OptimalSolution &item);
+
 struct Bounds {
   std::vector<float> lower;
   std::vector<float> upper;
@@ -68,20 +57,41 @@ struct Bounds {
   };
 };
 
+constexpr const std::size_t nSuccess{0};
+constexpr const std::size_t nRelevant{1};
+constexpr const std::size_t nExplored{2};
+constexpr const std::size_t nInteger{3};
+
 struct Node {
   float value;
   std::size_t b_index;
   float b_value; // for the knapsack it is always 0, but it is not so in general
-  bool integrality;
-  bool explored;
+  std::bitset<4> info;
   std::unique_ptr<Node> childs[2];
 
   Node()
       : value(-std::numeric_limits<float>::infinity()), b_index{0},
-        b_value{0.f}, integrality{false}, explored{false},
-        childs{nullptr, nullptr} {};
+        b_value{0.f}, info{}, childs{nullptr, nullptr} {};
   Node(float value) : Node() { this->value = value; };
   ~Node(){};
+
+  float best_upper_bound() const ;
+
+  std::string to_json() const{
+    std::string js = "{";
+    js += "\"value\": \"" + std::to_string(value) + "\",";
+    js += "\"info\" : \"" + info.to_string() + "\"";
+    if (childs[0] != nullptr || childs[1] != nullptr){
+      js += ",\"childs\": [ ";
+      if (childs[0] != nullptr)
+        js += childs[0]->to_json() + ",";
+      if (childs[1] != nullptr)
+        js += childs[1]->to_json();
+      js += "]";
+    }
+    return js + "}";
+  };
+
 };
 
 struct ExploreNode {

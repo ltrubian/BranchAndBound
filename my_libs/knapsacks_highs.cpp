@@ -77,25 +77,32 @@ const float KnapsackHighs::objective(const std::vector<float> &solution) const {
 }
 
 template <>
-const OptimalSolution
+std::pair<OptimalSolution, std::unique_ptr<Node>>
 branch_bound<KnapsackHighs, DepthFirst, PruneNone>(const KnapsackHighs &,
                                                    Bounds &, OptimalSolution);
 
 template <>
-const OptimalSolution
+std::pair<OptimalSolution, std::unique_ptr<Node>>
 branch_bound<KnapsackHighs, DepthFirst, PruneUntill>(const KnapsackHighs &,
                                                      Bounds &, OptimalSolution);
 template <>
-const OptimalSolution
+std::pair<OptimalSolution, std::unique_ptr<Node>>
 branch_bound<KnapsackHighs, DepthFirst, PruneAll>(const KnapsackHighs &,
                                                   Bounds &, OptimalSolution);
 template <>
-const OptimalSolution branch_bound<KnapsackHighs, BestBoundFirst, PruneNone>(
-    const KnapsackHighs &, Bounds &, OptimalSolution);
+std::pair<OptimalSolution, std::unique_ptr<Node>>
+branch_bound<KnapsackHighs, BestBoundFirst, PruneNone>(const KnapsackHighs &,
+                                                       Bounds &,
+                                                       OptimalSolution);
 
 template <>
-const OptimalSolution branch_bound<KnapsackHighs, BestBoundFirst, PruneUntill>(
-    const KnapsackHighs &, Bounds &, OptimalSolution);
+std::pair<OptimalSolution, std::unique_ptr<Node>>
+branch_bound<KnapsackHighs, BestBoundFirst, PruneUntill>(const KnapsackHighs &,
+                                                         Bounds &,
+                                                         OptimalSolution);
+
 template <>
-const OptimalSolution branch_bound<KnapsackHighs, BestBoundFirst, PruneAll>(
-    const KnapsackHighs &, Bounds &, OptimalSolution);
+std::pair<OptimalSolution, std::unique_ptr<Node>>
+branch_bound<KnapsackHighs, BestBoundFirst, PruneAll>(const KnapsackHighs &,
+                                                      Bounds &,
+                                                      OptimalSolution);

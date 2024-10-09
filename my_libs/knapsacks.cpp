@@ -97,29 +97,48 @@ const float Knapsack::objective(const std::vector<float> &solution) const {
   return res;
 }
 
+std::ostream &operator<<(std::ostream &os, Knapsack &item) {
+  os << item.prices.size() << " " << item.capacity << "\n";
+  for (auto i{0}; i < item.prices.size(); ++i) {
+    os << item.prices[i] << " " << item.weights[i] << "\n";
+  }
+  return os;
+};
+
+std::istream &operator>>(std::istream &is, Knapsack &item) {
+  std::size_t n;
+  is >> n >> item.capacity;
+  item.prices.resize(n);
+  item.weights.resize(n);
+  for (auto i{0}; i < n; ++i) {
+    is >> item.prices[i] >> item.weights[i];
+  }
+  return is;
+};
+
 template <>
-const OptimalSolution
+std::pair<OptimalSolution, std::unique_ptr<Node>>
 branch_bound<Knapsack, DepthFirst, PruneNone>(const Knapsack &, Bounds &,
                                               OptimalSolution);
 
 template <>
-const OptimalSolution
+std::pair<OptimalSolution, std::unique_ptr<Node>>
 branch_bound<Knapsack, DepthFirst, PruneUntill>(const Knapsack &, Bounds &,
                                                 OptimalSolution);
 template <>
-const OptimalSolution
+std::pair<OptimalSolution, std::unique_ptr<Node>>
 branch_bound<Knapsack, DepthFirst, PruneAll>(const Knapsack &, Bounds &,
                                              OptimalSolution);
 template <>
-const OptimalSolution
+std::pair<OptimalSolution, std::unique_ptr<Node>>
 branch_bound<Knapsack, BestBoundFirst, PruneNone>(const Knapsack &, Bounds &,
                                                   OptimalSolution);
 
 template <>
-const OptimalSolution
+std::pair<OptimalSolution, std::unique_ptr<Node>>
 branch_bound<Knapsack, BestBoundFirst, PruneUntill>(const Knapsack &, Bounds &,
                                                     OptimalSolution);
 template <>
-const OptimalSolution
+std::pair<OptimalSolution, std::unique_ptr<Node>>
 branch_bound<Knapsack, BestBoundFirst, PruneAll>(const Knapsack &, Bounds &,
                                                  OptimalSolution);
