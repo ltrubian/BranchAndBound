@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <random>
 #include <stdexcept>
+#include <utility>
 
 static float TOL{1e-3};
 
@@ -29,21 +30,21 @@ Bounds random_bounds(std::size_t n, std::size_t seed) {
 };
 
 template <typename T>
-OptimalSolution select_solver_variant(const T &prob, Bounds &bounds,
-                                      int select) {
+std::pair<OptimalSolution, std::unique_ptr<Node>> select_solver_variant(const T &prob, Bounds &bounds,
+                                      int select, OptimalSolution opt = OptimalSolution()) {
   switch (select) {
   case 0:
-    return branch_bound<T, DepthFirst, PruneNone>(prob, bounds);
+    return branch_bound<T, DepthFirst, PruneNone>(prob, bounds, opt);
   case 1:
-    return branch_bound<T, DepthFirst, PruneUntill>(prob, bounds);
+    return branch_bound<T, DepthFirst, PruneUntill>(prob, bounds, opt);
   case 2:
-    return branch_bound<T, DepthFirst, PruneAll>(prob, bounds);
+    return branch_bound<T, DepthFirst, PruneAll>(prob, bounds, opt);
   case 3:
-    return branch_bound<T, BestBoundFirst, PruneNone>(prob, bounds);
+    return branch_bound<T, BestBoundFirst, PruneNone>(prob, bounds, opt);
   case 4:
-    return branch_bound<T, BestBoundFirst, PruneUntill>(prob, bounds);
+    return branch_bound<T, BestBoundFirst, PruneUntill>(prob, bounds, opt);
   case 5:
-    return branch_bound<T, BestBoundFirst, PruneAll>(prob, bounds);
+    return branch_bound<T, BestBoundFirst, PruneAll>(prob, bounds, opt);
   default:
     throw std::out_of_range("0-5 are valid, no other variants are allowed");
   }
@@ -62,7 +63,8 @@ TEST_CASE("knapsack: relaxed solver") {
     auto sol_hi{problem_highs.solve_relaxed(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
+    INFO("n: " << n << "\tseed: " << seed );
+    CHECK_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
   }
   SECTION("default bounds, random problems") {
     std::size_t seed = GENERATE(take(20, random(0, 100000)));
@@ -73,7 +75,8 @@ TEST_CASE("knapsack: relaxed solver") {
     auto sol_hi{problem_highs.solve_relaxed(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
+    INFO("n: " << n << "\tseed: " << seed );
+    CHECK_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
   }
   SECTION("random bounds") {
     std::size_t seed = GENERATE(take(20, random(0, 100000)));
@@ -84,7 +87,8 @@ TEST_CASE("knapsack: relaxed solver") {
     auto sol_hi{problem_highs.solve_relaxed(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
+    INFO("n: " << n << "\tseed: " << seed );
+    CHECK_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
   }
 }
 
@@ -98,11 +102,12 @@ TEST_CASE("knapsack: all assembled") {
     KnapsackHighs problem_highs(problem);
     Bounds bounds{n, 0.f, 1.f};
     int selection = GENERATE(range(0, 6));
-    auto sol_my{select_solver_variant(problem, bounds, selection)};
+    auto [sol_my, root] = select_solver_variant(problem, bounds, selection);
     auto sol_hi{problem_highs.solve_integer(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
+    INFO("n: " << n << "\tselection: "<< selection << "\tseed: " << seed );
+    CHECK_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
   }
   SECTION("default bounds, random problems") {
     std::size_t seed = GENERATE(take(5, random(0, 100000)));
@@ -110,11 +115,41 @@ TEST_CASE("knapsack: all assembled") {
     KnapsackHighs problem_highs(problem);
     Bounds bounds{n, 0.f, 1.f};
     int selection = GENERATE(range(0, 6));
-    auto sol_my{select_solver_variant(problem, bounds, selection)};
+    auto [sol_my, root] = select_solver_variant(problem, bounds, selection);
     auto sol_hi{problem_highs.solve_integer(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
+
+    INFO("n: " << n << "\tselection: "<< selection << "\tseed: " << seed );
+    CHECK_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
+  }
+    SECTION("default bounds, random problems, opt naive on") {
+    std::size_t seed = GENERATE(take(5, random(0, 100000)));
+    Knapsack problem{v, m, n, seed};
+    KnapsackHighs problem_highs(problem);
+    Bounds bounds{n, 0.f, 1.f};
+    OptimalSolution opt = problem.solve_integer_naive(bounds);
+    int selection = GENERATE(range(0, 6));
+    auto [sol_my, root] = select_solver_variant(problem, bounds, selection, opt);
+    auto sol_hi{problem_highs.solve_integer(bounds)};
+
+    REQUIRE(sol_my.success == sol_hi.success);
+    INFO("n: " << n << "\tselection: "<< selection << "\tseed: " << seed );
+    CHECK_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
+  }
+    SECTION("default bounds, random problems, opt on") {
+    std::size_t seed = GENERATE(take(5, random(0, 100000)));
+    Knapsack problem{v, m, n, seed};
+    KnapsackHighs problem_highs(problem);
+    Bounds bounds{n, 0.f, 1.f};
+    OptimalSolution opt = problem.solve_integer_guess(bounds);
+    int selection = GENERATE(range(0, 6));
+    auto [sol_my, root] = select_solver_variant(problem, bounds, selection, opt);
+    auto sol_hi{problem_highs.solve_integer(bounds)};
+
+    REQUIRE(sol_my.success == sol_hi.success);
+    INFO("n: " << n << "\tselection: "<< selection << "\tseed: " << seed );
+    CHECK_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
   }
   SECTION("random bounds") {
     std::size_t seed = GENERATE(take(5, random(0, 100000)));
@@ -122,10 +157,11 @@ TEST_CASE("knapsack: all assembled") {
     KnapsackHighs problem_highs(problem);
     Bounds bounds{random_bounds(n, seed)};
     int selection = GENERATE(range(0, 6));
-    auto sol_my{select_solver_variant(problem, bounds, selection)};
+    auto [sol_my, root] = select_solver_variant(problem, bounds, selection);
     auto sol_hi{problem_highs.solve_integer(bounds)};
 
     REQUIRE(sol_my.success == sol_hi.success);
-    REQUIRE_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
+    INFO("n: " << n << "\tselection: "<< selection << "\tseed: " << seed );
+    CHECK_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
   }
 }

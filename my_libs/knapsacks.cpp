@@ -85,7 +85,55 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
 
   return opt_sol;
 }
+const OptimalSolution Knapsack::solve_integer_naive(const Bounds& bounds) const {
+  OptimalSolution opt{this->solve_relaxed(bounds)};
+  std::for_each(opt.solution.begin(),opt.solution.end() , [](float& x) {x = std::floor(x);} );
+  opt.value = this->objective(opt.solution);
+  return opt;
+};
 
+const OptimalSolution Knapsack::solve_integer_guess(const Bounds &bounds) const {
+  OptimalSolution opt_sol{};
+  float correct_capacity{this->capacity -
+                         std::inner_product(std::begin(bounds.lower),
+                                            std::end(bounds.lower),
+                                            std::begin(this->weights), 0.0f)};
+  // if the items the bounds make me take are too much => infeasible bounds
+  if (correct_capacity < 0)
+    return opt_sol;
+  std::vector<float> real_prices{bounds.upper * (1.0f - bounds.lower)};
+  long int items_takable{std::count_if(std::begin(real_prices),
+                                       std::end(real_prices),
+                                       [](float p) { return 0.f != p; })};
+  // if there are no other items to take but the ones I must => the solution is
+  // the item I must take
+  opt_sol.solution =
+      bounds.lower; // and the lower bounds are the "starting" optimal solution
+  if (items_takable == 0) {
+    opt_sol.success = true;
+    opt_sol.value = this->objective(opt_sol.solution);
+    return opt_sol;
+  }
+  real_prices *= (this->prices / this->weights);
+  std::vector<std::size_t> indexes(real_prices.size());
+  std::iota(std::begin(indexes), std::end(indexes), 0ul);
+  std::sort(indexes.begin(), indexes.end(),
+            [&](std::size_t &x, std::size_t &y) {
+              return real_prices[x] > real_prices[y];
+            });
+  for (auto ind{std::begin(indexes)};
+       ind != std::begin(indexes) + items_takable; ++ind) {
+    if (correct_capacity < this->weights[*ind]) {
+      continue;;
+    }
+    correct_capacity -= this->weights[*ind];
+    opt_sol.solution[*ind] = 1.0f;
+  }
+  opt_sol.success = true;
+  opt_sol.value = this->objective(opt_sol.solution);
+
+  return opt_sol;
+}
 const float Knapsack::objective(const std::vector<float> &solution) const {
   float res{0.0};
   auto sol{std::begin(solution)};

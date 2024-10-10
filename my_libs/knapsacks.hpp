@@ -24,6 +24,8 @@ struct Knapsack {
   explicit Knapsack(std::size_t v, float m, std::size_t n, std::size_t seed);
 
   const OptimalSolution solve_relaxed(const Bounds &bounds) const;
+  const OptimalSolution solve_integer_naive(const Bounds &bounds) const;
+  const OptimalSolution solve_integer_guess(const Bounds &bounds) const;
 
   const float objective(const std::vector<float> &solution) const;
 };
