@@ -30,9 +30,9 @@ struct Knapsack {
   const float objective(const std::vector<float> &solution) const;
 };
 
-std::ostream &operator<<(std::ostream &os, Knapsack &item) ;
+std::ostream &operator<<(std::ostream &os, Knapsack &item);
 
-std::istream &operator>>(std::istream &is, Knapsack &item) ;
+std::istream &operator>>(std::istream &is, Knapsack &item);
 // The definitions of the operations between vector (that are element-wise
 // operations) follow the syntax of numpy
 template <typename T> std::vector<T> operator-(T b, const std::vector<T> &a) {

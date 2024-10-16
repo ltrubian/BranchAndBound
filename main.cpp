@@ -1,6 +1,7 @@
 #include "branch_and_bound.hpp"
 #include "knapsacks.hpp"
 #include "knapsacks_highs.hpp"
+#include "test-bench/catch.hpp"
 #include "utilities.hpp"
 #include <chrono>
 #include <cmath>
@@ -9,8 +10,19 @@
 #include <random>
 #include <stdexcept>
 
-template <typename T>
-auto select_solver_variant(const T &prob, Bounds &bounds,
+auto select_start_opt(const Knapsack &prob, const Bounds &bounds, int select) {
+  switch (select) {
+  case 0:
+    return OptimalSolution();
+  case 1:
+    return prob.solve_integer_naive(bounds);
+  case 2:
+    return prob.solve_integer_guess(bounds);
+  default:
+    throw std::out_of_range("0-2: no other starting solution available");
+  }
+}
+auto select_solver_variant(const Knapsack &prob, const Bounds &bounds,
                            const OptimalSolution start_opt, int select) {
   auto time_it = [&](auto F) {
     auto t0 = std::chrono::high_resolution_clock::now();
@@ -22,22 +34,53 @@ auto select_solver_variant(const T &prob, Bounds &bounds,
   };
   switch (select) {
   case 0:
-    return time_it(branch_bound<T, DepthFirst, PruneNone>);
+    return time_it(branch_bound<Knapsack, DepthFirst, PruneNone>);
   case 1:
-    return time_it(branch_bound<T, DepthFirst, PruneUntill>);
+    return time_it(branch_bound<Knapsack, DepthFirst, PruneUntill>);
   case 2:
-    return time_it(branch_bound<T, DepthFirst, PruneAll>);
+    return time_it(branch_bound<Knapsack, DepthFirst, PruneAll>);
   case 3:
-    return time_it(branch_bound<T, BestBoundFirst, PruneNone>);
+    return time_it(branch_bound<Knapsack, BestBoundFirst, PruneNone>);
   case 4:
-    return time_it(branch_bound<T, BestBoundFirst, PruneUntill>);
+    return time_it(branch_bound<Knapsack, BestBoundFirst, PruneUntill>);
   case 5:
-    return time_it(branch_bound<T, BestBoundFirst, PruneAll>);
+    return time_it(branch_bound<Knapsack, BestBoundFirst, PruneAll>);
   default:
     throw std::out_of_range("0-5 are valid, no other variants are allowed");
   }
 }
-
+auto benchmark(float v, float m) {
+  std::random_device rd;
+  std::uniform_int_distribution<std::size_t> di(0);
+  std::string filename{"bench-" + std::to_string(di(rd)) + ".csv"};
+  std::ofstream result(filename);
+  for (auto N{40}; N < 151; N += 10) {
+    for (auto n_test(0); n_test < 10; ++n_test) {
+      const auto seed{di(rd)};
+      const auto problem{Knapsack(v, m, N, seed)};
+      const auto bounds{Bounds(N, 0.f, 1.f)};
+      const auto tester{KnapsackHighs(problem)};
+      auto t0 = std::chrono::high_resolution_clock::now();
+      const auto real_opt{tester.solve_integer(bounds)};
+      auto t1 = std::chrono::high_resolution_clock::now();
+      auto d_t = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0)
+                     .count();
+      for (auto sopt{0}; sopt < 3; ++sopt) {
+        const auto start_opt{select_start_opt(problem, bounds, sopt)};
+        for (auto solver{0}; solver < 6; ++solver) {
+          auto [opt, root, d] =
+              select_solver_variant(problem, bounds, start_opt, solver);
+          result << N << "," << n_test << "," << seed << ","  // test id
+                 << sopt << "," << solver << ","              // solver id
+                 << opt.nodes << "," << d << ","              // bench result
+                 << opt.value << "," << real_opt.value << "," // compare opt_sol
+                 << std::to_string(real_opt.value == opt.value) << "," //
+                 << d_t << std::endl;
+        }
+      }
+    }
+  }
+}
 constexpr std::size_t sProblem{0};
 constexpr std::size_t sFirst{1};
 constexpr std::size_t sPrune{2};
@@ -134,12 +177,15 @@ auto parser(int argc, char *argv[]) {
 };
 
 int main(int argc, char *argv[]) { /*
-   std::string filename = "solution.txt";
-   std::ifstream istrm(filename);
-   OptimalSolution tmp;
-   istrm >> tmp;
-   std::cout << tmp;*/
-
+                                 std::string filename = "solution.txt";
+                                 std::ifstream istrm(filename);
+                                 OptimalSolution tmp;
+                                 istrm >> tmp;
+                                 std::cout << tmp;*/
+  std::cout << "start benchmark" << std::endl;
+  benchmark(5, 20.f);
+  std::cout << "end benchmark" << std::endl;
+  /*
   std::random_device rd;
   std::uniform_int_distribution<std::size_t> di(0);
   std::size_t n{10};
@@ -168,6 +214,6 @@ int main(int argc, char *argv[]) { /*
   KnapsackHighs check{prob};
   auto opt_highs = check.solve_integer(real);
   std::cout << "highs value: " << opt_highs.value << std::endl;
-
+*/
   return 0;
 }

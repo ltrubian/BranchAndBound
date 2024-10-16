@@ -15,19 +15,21 @@ const void core_solve_choose(const T &problem, Bounds &bounds,
                              std::set<ExploreNode, Order> &subproblems);
 
 template <typename T, typename Order, template <typename> typename Prune>
-std::pair<OptimalSolution, std::unique_ptr<Node>> branch_bound(const T &problem, Bounds &bounds,
+std::pair<OptimalSolution, std::unique_ptr<Node>>
+branch_bound(const T &problem, const Bounds &bounds,
              const OptimalSolution start_opt = OptimalSolution()) {
 
   OptimalSolution opt_sol{start_opt};
+  Bounds st_bounds{bounds};
 
   std::set<ExploreNode, Order> active_problems;
 
   std::unique_ptr<Node> root{new Node()};
-  core_solve_choose<T, Order, Prune>(problem, bounds, opt_sol, root,
+  core_solve_choose<T, Order, Prune>(problem, st_bounds, opt_sol, root,
                                      active_problems);
 
   while (!active_problems.empty()) {
-    //std::cout << root->best_upper_bound() << std::endl;
+    // std::cout << root->best_upper_bound() << std::endl;
     root->best_upper_bound();
     ExploreNode current_prob =
         std::move(active_problems.extract(--active_problems.end()).value());
@@ -49,7 +51,7 @@ std::pair<OptimalSolution, std::unique_ptr<Node>> branch_bound(const T &problem,
   opt_sol.success = active_problems.empty() &&
                     opt_sol.value != -std::numeric_limits<float>::infinity();
 
-  return std::make_pair( std::move(opt_sol), std::move(root));
+  return std::make_pair(std::move(opt_sol), std::move(root));
 }
 
 template <typename T, typename Order, template <typename> typename Prune>
@@ -62,7 +64,7 @@ const void core_solve_choose(const T &problem, Bounds &bounds,
     return;
 
   node->info.set(nSuccess);
-  if ( opt.value >= current_sol.value)
+  if (opt.value >= current_sol.value)
     return;
 
   node->info.set(nRelevant);
@@ -87,6 +89,5 @@ const void core_solve_choose(const T &problem, Bounds &bounds,
     node->b_value = integral;
     subproblems.emplace(ExploreNode(opt.nodes, bounds, *node));
   }
-
 }
 #endif // __BRANCH_BOUND__LT
