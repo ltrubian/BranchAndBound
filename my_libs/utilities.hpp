@@ -19,6 +19,8 @@ struct OptimalSolution {
       : success{false}, nodes{0},
         value{-std::numeric_limits<float>::infinity()},
         solution{std::vector<float>()} {};
+
+  bool is_integer() const;
 };
 
 std::ostream &operator<<(std::ostream &os, OptimalSolution &item);

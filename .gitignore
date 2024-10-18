@@ -11,4 +11,4 @@ compile_commands.json
 **/*:Zone.Identifier
 **/Testing/
 **/build/
-
+**/.ipynb_checkpoints/

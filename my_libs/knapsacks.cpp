@@ -149,6 +149,10 @@ const float Knapsack::objective(const std::vector<float> &solution) const {
   return res;
 }
 
+const bool Knapsack::is_feasible(const OptimalSolution& opt) const {
+  return std::inner_product(weights.begin(), weights.end(), opt.solution.begin(), 0.f) <= this->capacity;
+};
+
 std::ostream &operator<<(std::ostream &os, Knapsack &item) {
   os << item.prices.size() << " " << item.capacity << "\n";
   for (auto i{0}; i < item.prices.size(); ++i) {

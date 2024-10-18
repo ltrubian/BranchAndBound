@@ -1,8 +1,20 @@
 #include "utilities.hpp"
 #include <algorithm>
+#include <cmath>
 #include <functional>
 #include <limits>
 #include <queue>
+
+bool OptimalSolution::is_integer() const {
+  float integral{0.f}, fractional{0.f};
+  for (auto &x : this->solution) {
+    fractional = std::modf(x, &integral);
+    if (fractional != 0.f) {
+      return false;
+    }
+  }
+  return true;
+}
 
 std::ostream &operator<<(std::ostream &os, OptimalSolution &item) {
   os << item.value << "\n";
@@ -21,7 +33,7 @@ std::istream &operator>>(std::istream &is, OptimalSolution &item) {
   return is;
 };
 
-float Node::best_upper_bound() const  {
+float Node::best_upper_bound() const {
   float up{std::numeric_limits<float>::infinity()};
   std::queue<std::reference_wrapper<const Node>> to_explore;
   std::size_t level_stopper{1};

@@ -28,6 +28,8 @@ struct Knapsack {
   const OptimalSolution solve_integer_guess(const Bounds &bounds) const;
 
   const float objective(const std::vector<float> &solution) const;
+
+  const bool is_feasible(const OptimalSolution&) const;
 };
 
 std::ostream &operator<<(std::ostream &os, Knapsack &item);
