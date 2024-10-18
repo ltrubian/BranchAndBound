@@ -1,6 +1,7 @@
 #include "knapsacks_highs.hpp"
 #include "Highs.h"
 #include "branch_and_bound.hpp"
+#include "utilities.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <lp_data/HConst.h>
@@ -59,14 +60,14 @@ const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
 
   if (opt_sol.success) {
     opt_sol.solution =
-        std::vector<float>(info.col_value.begin(), info.col_value.end());
+        std::vector<MFloat>(info.col_value.begin(), info.col_value.end());
     opt_sol.value = this->objective(opt_sol.solution);
   }
   return opt_sol;
 }
 
-const float KnapsackHighs::objective(const std::vector<float> &solution) const {
-  float res{0.0};
+const MFloat KnapsackHighs::objective(const std::vector<MFloat> &solution) const {
+  MFloat res{0.0};
   auto sol{std::begin(solution)};
   for (auto price{std::begin(this->prices)}; price != std::end(this->prices);
        ++price) {

@@ -9,9 +9,9 @@
  * Class of the Knapsack problem, interface for HiGHS
  */
 struct KnapsackHighs {
-  std::vector<float> prices;
-  std::vector<float> weights;
-  float capacity;
+  std::vector<MFloat> prices;
+  std::vector<MFloat> weights;
+  MFloat capacity;
   HighsModel problem;
 
   explicit KnapsackHighs(const Knapsack &model)
@@ -39,7 +39,7 @@ struct KnapsackHighs {
   const OptimalSolution highs_solver(const Bounds &bounds,
                                      bool integrality) const;
 
-  const float objective(const std::vector<float> &solution) const;
+  const MFloat objective(const std::vector<MFloat> &solution) const;
 };
 
 #endif // __KNAPSACKS__HIGHS__

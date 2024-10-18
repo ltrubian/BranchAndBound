@@ -49,7 +49,7 @@ branch_bound(const T &problem, const Bounds &bounds,
   // in case the loop is stopped, active_problems could contains subproblems
   // to explore
   opt_sol.success = active_problems.empty() &&
-                    opt_sol.value != -std::numeric_limits<float>::infinity();
+                    opt_sol.value != -std::numeric_limits<MFloat>::infinity();
 
   return std::make_pair(std::move(opt_sol), std::move(root));
 }
@@ -69,7 +69,7 @@ const void core_solve_choose(const T &problem, Bounds &bounds,
 
   node->info.set(nRelevant);
   // search for the first non integer value of the solution
-  float integral{0.f}, fractional{0.f};
+  MFloat integral{0.f}, fractional{0.f};
   auto index{0};
   for (auto &x : current_sol.solution) {
     fractional = std::modf(x, &integral);
