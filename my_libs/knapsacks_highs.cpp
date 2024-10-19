@@ -47,9 +47,11 @@ const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
   }
   // solve
   Highs highs;
+  highs.setOptionValue("mip_rel_gap", 1e-8);
+  highs.setOptionValue("output_flag", false);
   HighsStatus return_status;
-  highs.setHighsOutput(tmpfile());
   return_status = highs.passModel(problem);
+
   assert(return_status == HighsStatus::kOk);
 
   return_status = highs.run();
@@ -61,7 +63,7 @@ const OptimalSolution KnapsackHighs::highs_solver(const Bounds &bounds,
   if (opt_sol.success) {
     opt_sol.solution =
         std::vector<MFloat>(info.col_value.begin(), info.col_value.end());
-    opt_sol.value = this->objective(opt_sol.solution);
+    opt_sol.value = highs.getInfo().objective_function_value;
   }
   return opt_sol;
 }

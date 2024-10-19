@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) { /*
   // secodi
   auto [prob, start_opt, select, seed] = parser(argc, argv);
   Bounds real(prob.prices.size(), 0.f, 1.f);
-  const auto [opt, root, d] =
+  auto [opt, root, d] =
       select_solver_variant(prob, real, start_opt, select);
   std::cout << "seed:\t" << seed << std::endl;
   std::cout << prob.prices.size() << "\t" << opt.success << "\t" << opt.nodes
@@ -226,5 +226,15 @@ int main(int argc, char *argv[]) { /*
   std::cout << std::inner_product(check.weights.begin(), check.weights.end(),
                                   opt_highs.solution.begin(), 0.f)
             << "\t" << check.capacity << std::endl;
+  filename = "problem.txt";
+  std::ofstream pr_file(filename);
+  pr_file << prob;
+  filename = "solution_my.txt";
+  std::ofstream sol_my(filename);
+  sol_my << opt;
+  filename = "solution_hi.txt";
+  std::ofstream sol_hi(filename);
+  sol_hi << opt_highs;
+
   return 0;
 }
