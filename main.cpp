@@ -55,11 +55,11 @@ auto benchmark(float v, float m) {
   std::string filename{"bench-" + std::to_string(di(rd)) + ".csv"};
   std::ofstream result(filename);
   for (auto N{40}; N < 151; N += 10) {
-    for (auto n_test(0); n_test < 100; ++n_test) {
+    for (auto n_test(0); n_test < 10; ++n_test) {
       const auto seed{di(rd)};
       const auto problem{Knapsack(v, m, N, seed)};
       const auto bounds{Bounds(N, 0.f, 1.f)};
-      const auto tester{KnapsackHighs(problem)};
+      auto tester{KnapsackHighs(problem)};
       auto t0 = std::chrono::high_resolution_clock::now();
       const auto real_opt{tester.solve_integer(bounds)};
       auto t1 = std::chrono::high_resolution_clock::now();
@@ -182,10 +182,27 @@ int main(int argc, char *argv[]) { /*
                                  OptimalSolution tmp;
                                  istrm >> tmp;
                                  std::cout << tmp;*/
-  // std::cout << "start benchmark" << std::endl;
-  // benchmark(5, 20.f);
-  // std::cout << "end benchmark" << std::endl;
+  std::cout << "start benchmark" << std::endl;
+  //benchmark(5, 20.f);
+  std::cout << "end benchmark" << std::endl;
+  float progress = 0.0;
+while (progress <= 1.0) {
+    int barWidth = 70;
 
+    std::cout << "[";
+    int pos = barWidth * progress;
+    for (int i = 0; i < barWidth; ++i) {
+        if (i < pos) std::cout << "=";
+        else if (i == pos) std::cout << ">";
+        else std::cout << " ";
+    }
+    std::cout << "] " << int(progress * 100.0) << " %\r";
+    std::cout.flush();
+
+    progress += 0.01; // for demonstration only
+}
+std::cout << std::endl;
+/*
   std::random_device rd;
   std::uniform_int_distribution<std::size_t> di(0);
   std::size_t n{10};
@@ -214,18 +231,7 @@ int main(int argc, char *argv[]) { /*
   KnapsackHighs check{prob};
   auto opt_highs = check.solve_integer(real);
   std::cout << "highs value: " << opt_highs.value << std::endl;
-  /*
-    for (auto x{0}; x < prob.prices.size(); ++x){
-      std::cout << opt.solution[x] << "\t" <<opt_highs.solution[x] << std::endl;
-    }
-  */
-  std::cout << check.objective(opt.solution) << std::endl;
-  std::cout << std::inner_product(prob.weights.begin(), prob.weights.end(),
-                                  opt.solution.begin(), 0.f)
-            << "\t" << prob.capacity << std::endl;
-  std::cout << std::inner_product(check.weights.begin(), check.weights.end(),
-                                  opt_highs.solution.begin(), 0.f)
-            << "\t" << check.capacity << std::endl;
+
   filename = "problem.txt";
   std::ofstream pr_file(filename);
   pr_file << prob;
@@ -235,6 +241,6 @@ int main(int argc, char *argv[]) { /*
   filename = "solution_hi.txt";
   std::ofstream sol_hi(filename);
   sol_hi << opt_highs;
-
+*/
   return 0;
 }

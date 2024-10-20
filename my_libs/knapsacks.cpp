@@ -139,14 +139,7 @@ Knapsack::solve_integer_guess(const Bounds &bounds) const {
   return opt_sol;
 }
 const MFloat Knapsack::objective(const std::vector<MFloat> &solution) const {
-  MFloat res{0.0};
-  auto sol{std::begin(solution)};
-  for (auto price{std::begin(this->prices)}; price != std::end(this->prices);
-       ++price) {
-    res = std::move(res) + *price * *sol;
-    ++sol;
-  }
-  return res;
+  return std::inner_product(solution.begin(), solution.end(), prices.begin(), 0.);
 }
 
 const bool Knapsack::is_feasible(const OptimalSolution& opt) const {
