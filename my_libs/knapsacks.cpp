@@ -167,31 +167,11 @@ std::istream &operator>>(std::istream &is, Knapsack &item) {
 
 template <>
 std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<Knapsack, DepthFirst, PruneNone>(const Knapsack &, const Bounds &,
+branch_bound<Knapsack, QueueDepth>(const Knapsack &, const Bounds &,
                                               Solution);
 
 template <>
 std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<Knapsack, DepthFirst, PruneUntill>(const Knapsack &,
+branch_bound<Knapsack, QueueBestBound>(const Knapsack &,
                                                 const Bounds &,
                                                 Solution);
-template <>
-std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<Knapsack, DepthFirst, PruneAll>(const Knapsack &, const Bounds &,
-                                             Solution);
-template <>
-std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<Knapsack, BestBoundFirst, PruneNone>(const Knapsack &,
-                                                  const Bounds &,
-                                                  Solution);
-
-template <>
-std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<Knapsack, BestBoundFirst, PruneUntill>(const Knapsack &,
-                                                    const Bounds &,
-                                                    Solution);
-template <>
-std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<Knapsack, BestBoundFirst, PruneAll>(const Knapsack &,
-                                                 const Bounds &,
-                                                 Solution);

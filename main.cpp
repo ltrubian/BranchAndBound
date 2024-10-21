@@ -37,19 +37,11 @@ auto select_solver_variant(const Knapsack &prob, const Bounds &bounds,
   };
   switch (select) {
   case 0:
-    return time_it(branch_bound<Knapsack, DepthFirst, PruneNone>);
+    return time_it(branch_bound<Knapsack, QueueDepth>);
   case 1:
-    return time_it(branch_bound<Knapsack, DepthFirst, PruneUntill>);
-  case 2:
-    return time_it(branch_bound<Knapsack, DepthFirst, PruneAll>);
-  case 3:
-    return time_it(branch_bound<Knapsack, BestBoundFirst, PruneNone>);
-  case 4:
-    return time_it(branch_bound<Knapsack, BestBoundFirst, PruneUntill>);
-  case 5:
-    return time_it(branch_bound<Knapsack, BestBoundFirst, PruneAll>);
+    return time_it(branch_bound<Knapsack, QueueBestBound>);
   default:
-    throw std::out_of_range("0-5 are valid, no other variants are allowed");
+    throw std::out_of_range("0-1 are valid, no other variants are allowed");
   }
 }
 auto benchmark(float v, float m) {
@@ -70,7 +62,7 @@ auto benchmark(float v, float m) {
                      .count();
       for (auto sopt{0}; sopt < 3; ++sopt) {
         const auto start_opt{select_start_opt(problem, bounds, sopt)};
-        for (auto solver{0}; solver < 6; ++solver) {
+        for (auto solver{0}; solver < 2; ++solver) {
           auto [opt, root, d] =
               select_solver_variant(problem, bounds, start_opt, solver);
           result << N << "," << n_test << "," << seed << ","  // test id
@@ -80,7 +72,7 @@ auto benchmark(float v, float m) {
                  << std::to_string(real_opt.value == opt.value) << "," //
                  << d_t << std::endl;
           int barWidth = 70;
-          double progress{(n_test * 18. + sopt * 6 + solver) / (10. * 18.)};
+          double progress{(n_test * 6. + sopt * 2 + solver) / (10. * 6.)};
           std::cout << "size:\t" << N << "\tn° test:\t" << n_test + 1 << "/"
                     << 10 << "\t" << "["                         //
                     << std::left << std::setw(barWidth)          //

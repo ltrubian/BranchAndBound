@@ -34,19 +34,11 @@ std::pair<Solution, std::unique_ptr<Node>> select_solver_variant(const T &prob, 
                                       int select, Solution opt = Solution()) {
   switch (select) {
   case 0:
-    return branch_bound<T, DepthFirst, PruneNone>(prob, bounds, opt);
+    return branch_bound<T, QueueDepth>(prob, bounds, opt);
   case 1:
-    return branch_bound<T, DepthFirst, PruneUntill>(prob, bounds, opt);
-  case 2:
-    return branch_bound<T, DepthFirst, PruneAll>(prob, bounds, opt);
-  case 3:
-    return branch_bound<T, BestBoundFirst, PruneNone>(prob, bounds, opt);
-  case 4:
-    return branch_bound<T, BestBoundFirst, PruneUntill>(prob, bounds, opt);
-  case 5:
-    return branch_bound<T, BestBoundFirst, PruneAll>(prob, bounds, opt);
+    return branch_bound<T, QueueBestBound>(prob, bounds, opt);
   default:
-    throw std::out_of_range("0-5 are valid, no other variants are allowed");
+    throw std::out_of_range("0-1 are valid, no other variants are allowed");
   }
 }
 
@@ -101,7 +93,7 @@ TEST_CASE("knapsack: all assembled") {
     Knapsack problem{v, m, n, seed};
     KnapsackHighs problem_highs(problem);
     Bounds bounds{n, 0.f, 1.f};
-    int selection = GENERATE(range(0, 6));
+    int selection = GENERATE(range(0, 2));
     auto [sol_my, root] = select_solver_variant(problem, bounds, selection);
     auto sol_hi{problem_highs.solve_integer(bounds)};
 
@@ -114,7 +106,7 @@ TEST_CASE("knapsack: all assembled") {
     Knapsack problem{v, m, n, seed};
     KnapsackHighs problem_highs(problem);
     Bounds bounds{n, 0.f, 1.f};
-    int selection = GENERATE(range(0, 6));
+    int selection = GENERATE(range(0, 2));
     auto [sol_my, root] = select_solver_variant(problem, bounds, selection);
     auto sol_hi{problem_highs.solve_integer(bounds)};
 
@@ -129,7 +121,7 @@ TEST_CASE("knapsack: all assembled") {
     KnapsackHighs problem_highs(problem);
     Bounds bounds{n, 0.f, 1.f};
     Solution opt = problem.solve_integer_naive(bounds);
-    int selection = GENERATE(range(0, 6));
+    int selection = GENERATE(range(0, 2));
     auto [sol_my, root] = select_solver_variant(problem, bounds, selection, opt);
     auto sol_hi{problem_highs.solve_integer(bounds)};
 
@@ -143,7 +135,7 @@ TEST_CASE("knapsack: all assembled") {
     KnapsackHighs problem_highs(problem);
     Bounds bounds{n, 0.f, 1.f};
     Solution opt = problem.solve_integer_guess(bounds);
-    int selection = GENERATE(range(0, 6));
+    int selection = GENERATE(range(0, 2));
     auto [sol_my, root] = select_solver_variant(problem, bounds, selection, opt);
     auto sol_hi{problem_highs.solve_integer(bounds)};
 
@@ -156,7 +148,7 @@ TEST_CASE("knapsack: all assembled") {
     Knapsack problem{v, m, n, seed};
     KnapsackHighs problem_highs(problem);
     Bounds bounds{random_bounds(n, seed)};
-    int selection = GENERATE(range(0, 6));
+    int selection = GENERATE(range(0, 2));
     auto [sol_my, root] = select_solver_variant(problem, bounds, selection);
     auto sol_hi{problem_highs.solve_integer(bounds)};
 

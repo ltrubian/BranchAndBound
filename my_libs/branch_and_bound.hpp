@@ -4,17 +4,16 @@
 #include "utilities.hpp"
 #include <cmath>
 #include <memory>
-#include <set>
 #include <utility>
 /**
  * Aim:
  */
-template <typename T, typename Order, template <typename> typename Prune>
+template <typename T, typename Queue>
 const void core_solve_choose(const T &problem, Bounds &bounds,
                              Solution &opt, std::unique_ptr<Node> &node,
-                             std::set<ExploreNode, Order> &subproblems);
+                             Queue &subproblems);
 
-template <typename T, typename Order, template <typename> typename Prune>
+template <typename T, typename Queue>
 std::pair<Solution, std::unique_ptr<Node>>
 branch_bound(const T &problem, const Bounds &bounds,
              const Solution start_opt = Solution()) {
@@ -22,17 +21,16 @@ branch_bound(const T &problem, const Bounds &bounds,
   Solution opt_sol{start_opt};
   Bounds st_bounds{bounds};
 
-  std::set<ExploreNode, Order> active_problems;
+  Queue active_problems;
 
   std::unique_ptr<Node> root{new Node()};
-  core_solve_choose<T, Order, Prune>(problem, st_bounds, opt_sol, root,
+  core_solve_choose<T, Queue>(problem, st_bounds, opt_sol, root,
                                      active_problems);
 
   while (!active_problems.empty()) {
     // std::cout << root->best_upper_bound() << std::endl;
     root->best_upper_bound();
-    ExploreNode current_prob =
-        std::move(active_problems.extract(--active_problems.end()).value());
+    ExploreNode current_prob = active_problems.take_next();
 
     for (auto i{0}; i < 2; ++i) {
       Bounds current_bounds{current_prob.bounds};
@@ -40,7 +38,7 @@ branch_bound(const T &problem, const Bounds &bounds,
           current_prob.node.b_value + 1. * i;
       ++opt_sol.nodes;
       // solve the relaxed problem
-      core_solve_choose<T, Order, Prune>(problem, current_bounds, opt_sol,
+      core_solve_choose<T, Queue>(problem, current_bounds, opt_sol,
                                          current_prob.node.childs[i],
                                          active_problems);
     }
@@ -54,10 +52,10 @@ branch_bound(const T &problem, const Bounds &bounds,
   return std::make_pair(std::move(opt_sol), std::move(root));
 }
 
-template <typename T, typename Order, template <typename> typename Prune>
+template <typename T, typename Queue>
 const void core_solve_choose(const T &problem, Bounds &bounds,
                              Solution &opt, std::unique_ptr<Node> &node,
-                             std::set<ExploreNode, Order> &subproblems) {
+                             Queue &subproblems) {
   Solution current_sol{problem.solve_relaxed(bounds)};
   node.reset(new Node(current_sol.value));
   if (!current_sol.success)
@@ -83,7 +81,7 @@ const void core_solve_choose(const T &problem, Bounds &bounds,
     opt.value = current_sol.value;
     opt.solution = current_sol.solution;
     node->info.set(nInteger);
-    Prune<std::set<ExploreNode, Order>>()(subproblems, opt.value);
+    subproblems.prune(opt.value);
   } else {
     node->b_index = index;
     node->b_value = integral;

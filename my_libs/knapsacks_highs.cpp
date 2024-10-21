@@ -42,34 +42,12 @@ KnapsackHighs::objective(const std::vector<double> &solution) const {
 
 template <>
 std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<KnapsackHighs, DepthFirst, PruneNone>(const KnapsackHighs &,
+branch_bound<KnapsackHighs, QueueDepth>(const KnapsackHighs &,
                                                    const Bounds &,
                                                    Solution);
 
 template <>
 std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<KnapsackHighs, DepthFirst, PruneUntill>(const KnapsackHighs &,
+branch_bound<KnapsackHighs, QueueBestBound>(const KnapsackHighs &,
                                                      const Bounds &,
                                                      Solution);
-template <>
-std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<KnapsackHighs, DepthFirst, PruneAll>(const KnapsackHighs &,
-                                                  const Bounds &,
-                                                  Solution);
-template <>
-std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<KnapsackHighs, BestBoundFirst, PruneNone>(const KnapsackHighs &,
-                                                       const Bounds &,
-                                                       Solution);
-
-template <>
-std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<KnapsackHighs, BestBoundFirst, PruneUntill>(const KnapsackHighs &,
-                                                         const Bounds &,
-                                                         Solution);
-
-template <>
-std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<KnapsackHighs, BestBoundFirst, PruneAll>(const KnapsackHighs &,
-                                                      const Bounds &,
-                                                      Solution);

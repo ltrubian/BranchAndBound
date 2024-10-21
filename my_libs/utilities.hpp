@@ -179,28 +179,4 @@ struct QueueDepth {
   };
 };
 
-template <typename T> struct PruneAll {
-  constexpr void operator()(T &queue, const double value) {
-    for (auto i{queue.begin()}; i != queue.end();) {
-      if (i->value <= value) {
-        i = queue.erase(i);
-      } else {
-        ++i;
-      }
-    }
-  }
-};
-
-template <typename T> struct PruneUntill {
-  constexpr void operator()(T &queue, const double value) {
-    auto i{queue.begin()};
-    while (i != queue.end() && i->value <= value) {
-      i = queue.erase(i);
-    }
-  }
-};
-template <typename T> struct PruneNone {
-  constexpr void operator()(T &queue, const double value) {};
-};
-
 #endif // __UTILITIES__LT
