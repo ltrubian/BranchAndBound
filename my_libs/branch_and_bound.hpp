@@ -37,7 +37,7 @@ branch_bound(const T &problem, const Bounds &bounds,
     for (auto i{0}; i < 2; ++i) {
       Bounds current_bounds{current_prob.bounds};
       current_bounds[i][current_prob.node.b_index] =
-          current_prob.node.b_value + 1.f * i;
+          current_prob.node.b_value + 1. * i;
       ++opt_sol.nodes;
       // solve the relaxed problem
       core_solve_choose<T, Order, Prune>(problem, current_bounds, opt_sol,
@@ -87,7 +87,7 @@ const void core_solve_choose(const T &problem, Bounds &bounds,
   } else {
     node->b_index = index;
     node->b_value = integral;
-    subproblems.emplace(ExploreNode(opt.nodes, bounds, *node));
+    subproblems.emplace(opt.nodes, bounds, *node);
   }
 }
 #endif // __BRANCH_BOUND__LT

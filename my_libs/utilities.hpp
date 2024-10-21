@@ -3,13 +3,13 @@
 
 #include <bitset>
 #include <cmath>
-#include <string>
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <set>
 #include <stdexcept>
+#include <string>
 #include <vector>
-
 
 struct Solution {
   bool success;
@@ -21,7 +21,8 @@ struct Solution {
   Solution()
       : success{false}, nodes{0},
         value{-std::numeric_limits<double>::infinity()},
-        solution{std::vector<double>()}, gap{std::numeric_limits<double>::infinity()} {};
+        solution{std::vector<double>()},
+        gap{std::numeric_limits<double>::infinity()} {};
 
   bool is_integer() const;
 };
@@ -36,7 +37,8 @@ struct Bounds {
 
   Bounds() : lower{std::vector<double>()}, upper{std::vector<double>()} {};
   Bounds(std::size_t n, double low, double up)
-      : lower{std::vector<double>(n, low)}, upper{std::vector<double>(n, up)} {};
+      : lower{std::vector<double>(n, low)},
+        upper{std::vector<double>(n, up)} {};
   explicit Bounds(std::size_t n)
       : Bounds(n, -std::numeric_limits<double>::infinity(),
                std::numeric_limits<double>::infinity()){};
@@ -70,7 +72,8 @@ constexpr const std::size_t nInteger{3};
 struct Node {
   double value;
   std::size_t b_index;
-  double b_value; // for the knapsack it is always 0, but it is not so in general
+  double
+      b_value; // for the knapsack it is always 0, but it is not so in general
   std::bitset<4> info;
   std::unique_ptr<Node> childs[2];
 
@@ -80,13 +83,13 @@ struct Node {
   Node(double value) : Node() { this->value = value; };
   ~Node(){};
 
-  double best_upper_bound() const ;
+  double best_upper_bound() const;
 
-  std::string to_json() const{
+  std::string to_json() const {
     std::string js = "{";
     js += "\"value\": \"" + std::to_string(value) + "\",";
     js += "\"info\" : \"" + info.to_string() + "\"";
-    if (childs[0] != nullptr || childs[1] != nullptr){
+    if (childs[0] != nullptr || childs[1] != nullptr) {
       js += ",\"childs\": [ ";
       if (childs[0] != nullptr)
         js += childs[0]->to_json() + ",";
@@ -96,7 +99,6 @@ struct Node {
     }
     return js + "}";
   };
-
 };
 
 struct ExploreNode {
@@ -108,16 +110,75 @@ struct ExploreNode {
   ExploreNode(std::size_t id, Bounds &bounds, Node &node)
       : node_id(id), value(node.value), bounds(bounds), node(node){};
 };
+
 struct DepthFirst {
-  constexpr bool operator()(const ExploreNode &a, const ExploreNode &b) const {
+  inline bool operator()(const ExploreNode &a, const ExploreNode &b) const {
     return a.node_id < b.node_id;
   };
 };
 struct BestBoundFirst {
-  constexpr bool operator()(const ExploreNode &a, const ExploreNode &b) const {
+  inline bool operator()(const ExploreNode &a, const ExploreNode &b) const {
     return (a.value < b.value) || (a.value == b.value && a.node_id > b.node_id);
   }
 };
+
+struct QueueBestBound {
+  std::set<ExploreNode, BestBoundFirst> queue;
+
+  void prune(const double &value) {
+    auto i{queue.begin()};
+    while (i != queue.end() && i->value <= value) {
+      i = queue.erase(i);
+    }
+  };
+
+  double max_value() const { return queue.begin()->value; };
+
+  bool empty() const { return queue.empty(); };
+  std::size_t size() const { return queue.size(); }
+
+  ExploreNode take_next() {
+    return std::move(queue.extract(--queue.end()).value());
+  };
+
+  template <class... Args> void emplace(Args &&...args) {
+    queue.emplace(std::forward<Args>(args)...);
+  };
+};
+
+struct QueueDepth {
+  std::set<ExploreNode, DepthFirst> queue;
+
+  void prune(const double &value) {
+    for (auto ex_node{queue.begin()}; ex_node != queue.end();) {
+      if (ex_node->value <= value)
+        ex_node = queue.erase(ex_node);
+      else
+        ++ex_node;
+    }
+  };
+
+  double max_value() const {
+    double max{-std::numeric_limits<double>::infinity()};
+    for (auto ex_node{queue.begin()}; ex_node!= queue.end(); ++ex_node) {
+      if (ex_node->value > max)
+        max = ex_node->value;
+    }
+    return max;
+  };
+
+  bool empty() const { return queue.empty(); };
+  std::size_t size() const { return queue.size(); }
+
+  ExploreNode take_next() {
+    return std::move(queue.extract(--queue.end()).value());
+  };
+
+  template <class... Args> void emplace(Args &&...args) {
+    queue.emplace(std::forward<Args>(args)...);
+  };
+};
+
 template <typename T> struct PruneAll {
   constexpr void operator()(T &queue, const double value) {
     for (auto i{queue.begin()}; i != queue.end();) {
