@@ -29,14 +29,14 @@ const OptimalSolution KnapsackHighs::solve_relaxed(const Bounds &bounds)  {
 
   if (opt_sol.success) {
     opt_sol.solution =
-        std::vector<MFloat>(info.col_value.begin(), info.col_value.end());
+        std::vector<double>(info.col_value.begin(), info.col_value.end());
     opt_sol.value = highs.getInfo().objective_function_value;
   }
   return opt_sol;
 }
 
-const MFloat
-KnapsackHighs::objective(const std::vector<MFloat> &solution) const {
+const double
+KnapsackHighs::objective(const std::vector<double> &solution) const {
   return std::inner_product(solution.begin(), solution.end(), problem.lp_.col_cost_.begin(), 0.);
 }
 

@@ -10,24 +10,24 @@
  * My class of the Knapsack problem
  */
 struct Knapsack {
-  std::vector<MFloat> prices;
-  std::vector<MFloat> weights;
-  MFloat capacity;
+  std::vector<double> prices;
+  std::vector<double> weights;
+  double capacity;
   explicit Knapsack(std::size_t n)
-      : prices{std::vector<MFloat>(n)}, weights{std::vector<MFloat>(n)},
+      : prices{std::vector<double>(n)}, weights{std::vector<double>(n)},
         capacity{0.f} {};
 
   /**
    * Random generator of Knapsack. It follows the step of the file
    * "project.pdf", section "Computational evaluation"
    */
-  explicit Knapsack(std::size_t v, MFloat m, std::size_t n, std::size_t seed);
+  explicit Knapsack(std::size_t v, double m, std::size_t n, std::size_t seed);
 
   const OptimalSolution solve_relaxed(const Bounds &bounds) const;
   const OptimalSolution solve_integer_naive(const Bounds &bounds) const;
   const OptimalSolution solve_integer_guess(const Bounds &bounds) const;
 
-  const MFloat objective(const std::vector<MFloat> &solution) const;
+  const double objective(const std::vector<double> &solution) const;
 
   const bool is_feasible(const OptimalSolution&) const;
 };

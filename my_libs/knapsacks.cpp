@@ -12,16 +12,16 @@
 #include <utility>
 #include <vector>
 
-Knapsack::Knapsack(std::size_t v, MFloat m, std::size_t n, std::size_t seed)
+Knapsack::Knapsack(std::size_t v,double m, std::size_t n, std::size_t seed)
     : Knapsack{n} {
   // pairs generation
   std::mt19937_64 gen(seed);
-  std::uniform_real_distribution<MFloat> dis_w(1., 1000.);
-  std::vector<MFloat> small_w(v), small_p(v);
+  std::uniform_real_distribution<double> dis_w(1., 1000.);
+  std::vector<double> small_w(v), small_p(v);
   std::generate(std::begin(small_w), std::end(small_w),
                 [&]() { return dis_w(gen); });
   for (auto i{0ul}; i < v; ++i) {
-    std::uniform_real_distribution<MFloat> dis_p(small_w[i] + 95.,
+    std::uniform_real_distribution<double> dis_p(small_w[i] + 95.,
                                                 small_w[i] + 105.);
     small_p[i] = dis_p(gen);
   }
@@ -29,32 +29,32 @@ Knapsack::Knapsack(std::size_t v, MFloat m, std::size_t n, std::size_t seed)
   small_p /= (m + 1);
   small_w /= (m + 1);
   // items generation
-  std::uniform_real_distribution<MFloat> multiplier(1., m);
+  std::uniform_real_distribution<double> multiplier(1., m);
   std::uniform_int_distribution<std::size_t> choice(0, v - 1);
   for (auto i{0ul}; i < n; ++i) {
     std::size_t pair{choice(gen)};
-    MFloat mult{multiplier(gen)};
+    double mult{multiplier(gen)};
     this->prices[i] = std::ceil(small_p[pair] * mult);
     this->weights[i] = std::ceil(small_w[pair] * mult);
   }
   // set capacity
-  MFloat tmp{std::accumulate(this->weights.begin(), this->weights.end(), 0.)};
+  double tmp{std::accumulate(this->weights.begin(), this->weights.end(), 0.)};
   this->capacity = std::ceil(tmp / 3);
 };
 
 const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
   OptimalSolution opt_sol{};
-  MFloat correct_capacity{this->capacity -
+  double correct_capacity{this->capacity -
                          std::inner_product(std::begin(bounds.lower),
                                             std::end(bounds.lower),
                                             std::begin(this->weights), 0.0)};
   // if the items the bounds make me take are too much => infeasible bounds
   if (correct_capacity < 0)
     return opt_sol;
-  std::vector<MFloat> real_prices{bounds.upper * (1.0 - bounds.lower)};
+  std::vector<double> real_prices{bounds.upper * (1.0 - bounds.lower)};
   long int items_takable{std::count_if(std::begin(real_prices),
                                        std::end(real_prices),
-                                       [](MFloat p) { return 0. != p; })};
+                                       [](double p) { return 0. != p; })};
   // if there are no other items to take but the ones I must => the solution is
   // the item I must take
   opt_sol.solution =
@@ -89,7 +89,7 @@ const OptimalSolution
 Knapsack::solve_integer_naive(const Bounds &bounds) const {
   OptimalSolution opt{this->solve_relaxed(bounds)};
   std::for_each(opt.solution.begin(), opt.solution.end(),
-                [](MFloat &x) { x = std::floor(x); });
+                [](double &x) { x = std::floor(x); });
   opt.value = this->objective(opt.solution);
   return opt;
 };
@@ -97,17 +97,17 @@ Knapsack::solve_integer_naive(const Bounds &bounds) const {
 const OptimalSolution
 Knapsack::solve_integer_guess(const Bounds &bounds) const {
   OptimalSolution opt_sol{};
-  MFloat correct_capacity{this->capacity -
+  double correct_capacity{this->capacity -
                          std::inner_product(std::begin(bounds.lower),
                                             std::end(bounds.lower),
                                             std::begin(this->weights), 0.0)};
   // if the items the bounds make me take are too much => infeasible bounds
   if (correct_capacity < 0)
     return opt_sol;
-  std::vector<MFloat> real_prices{bounds.upper * (1.0 - bounds.lower)};
+  std::vector<double> real_prices{bounds.upper * (1.0 - bounds.lower)};
   long int items_takable{std::count_if(std::begin(real_prices),
                                        std::end(real_prices),
-                                       [](MFloat p) { return 0. != p; })};
+                                       [](double p) { return 0. != p; })};
   // if there are no other items to take but the ones I must => the solution is
   // the item I must take
   opt_sol.solution =
@@ -138,7 +138,7 @@ Knapsack::solve_integer_guess(const Bounds &bounds) const {
 
   return opt_sol;
 }
-const MFloat Knapsack::objective(const std::vector<MFloat> &solution) const {
+const double Knapsack::objective(const std::vector<double> &solution) const {
   return std::inner_product(solution.begin(), solution.end(), prices.begin(), 0.);
 }
 

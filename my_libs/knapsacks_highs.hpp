@@ -69,7 +69,7 @@ struct KnapsackHighs {
     return this->solve_relaxed(bounds);
   }
 
-  const MFloat objective(const std::vector<MFloat> &solution) const;
+  const double objective(const std::vector<double> &solution) const;
 };
 
 #endif // __KNAPSACKS__HIGHS__

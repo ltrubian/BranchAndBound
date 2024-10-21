@@ -5,10 +5,10 @@
 #include <limits>
 #include <queue>
 
-//typedef double MFloat;
+//typedef double double;
 
 bool OptimalSolution::is_integer() const {
-  MFloat integral{0.f}, fractional{0.f};
+  double integral{0.f}, fractional{0.f};
   for (auto &x : this->solution) {
     fractional = std::modf(x, &integral);
     if (fractional != 0.f) {
@@ -35,8 +35,8 @@ std::istream &operator>>(std::istream &is, OptimalSolution &item) {
   return is;
 };
 
-MFloat Node::best_upper_bound() const {
-  MFloat up{std::numeric_limits<MFloat>::infinity()};
+double Node::best_upper_bound() const {
+  double up{std::numeric_limits<double>::infinity()};
   std::queue<std::reference_wrapper<const Node>> to_explore;
   std::size_t level_stopper{1};
   bool next_level_relevant{true};
@@ -44,7 +44,7 @@ MFloat Node::best_upper_bound() const {
 
   while (!to_explore.empty() && next_level_relevant) {
     std::size_t curr_level_nodes{0};
-    MFloat curr_up{-std::numeric_limits<MFloat>::infinity()};
+    double curr_up{-std::numeric_limits<double>::infinity()};
 
     for (std::size_t ind{0}; ind < level_stopper; ++ind) {
       auto node{to_explore.front()};
