@@ -54,12 +54,12 @@ struct KnapsackHighs {
    * This method is called in the branch_bound template function.
    * No integrality constrains are guaranteed
    */
-  const OptimalSolution solve_relaxed(const Bounds &bounds);
+  const Solution solve_relaxed(const Bounds &bounds);
 
   /**
    * This method solve the problem with integrality constrains enforced
    */
-  const OptimalSolution solve_integer(const Bounds &bounds) {
+  const Solution solve_integer(const Bounds &bounds) {
     HighsStatus return_status;
     std::vector<HighsVarType> opt_integrality(bounds.lower.size(),
                                               HighsVarType::kInteger);

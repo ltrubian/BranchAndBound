@@ -11,23 +11,24 @@
 #include <vector>
 
 
-struct OptimalSolution {
+struct Solution {
   bool success;
   std::size_t nodes;
   double value;
+  double gap;
   std::vector<double> solution;
 
-  OptimalSolution()
+  Solution()
       : success{false}, nodes{0},
         value{-std::numeric_limits<double>::infinity()},
-        solution{std::vector<double>()} {};
+        solution{std::vector<double>()}, gap{std::numeric_limits<double>::infinity()} {};
 
   bool is_integer() const;
 };
 
-std::ostream &operator<<(std::ostream &os, OptimalSolution &item);
+std::ostream &operator<<(std::ostream &os, Solution &item);
 
-std::istream &operator>>(std::istream &is, OptimalSolution &item);
+std::istream &operator>>(std::istream &is, Solution &item);
 
 struct Bounds {
   std::vector<double> lower;

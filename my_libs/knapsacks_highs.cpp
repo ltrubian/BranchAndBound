@@ -10,8 +10,8 @@
 #include <utility>
 #include <vector>
 
-const OptimalSolution KnapsackHighs::solve_relaxed(const Bounds &bounds)  {
-  OptimalSolution opt_sol{};
+const Solution KnapsackHighs::solve_relaxed(const Bounds &bounds)  {
+  Solution opt_sol{};
 
   HighsStatus return_status;
 
@@ -41,35 +41,35 @@ KnapsackHighs::objective(const std::vector<double> &solution) const {
 }
 
 template <>
-std::pair<OptimalSolution, std::unique_ptr<Node>>
+std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<KnapsackHighs, DepthFirst, PruneNone>(const KnapsackHighs &,
                                                    const Bounds &,
-                                                   OptimalSolution);
+                                                   Solution);
 
 template <>
-std::pair<OptimalSolution, std::unique_ptr<Node>>
+std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<KnapsackHighs, DepthFirst, PruneUntill>(const KnapsackHighs &,
                                                      const Bounds &,
-                                                     OptimalSolution);
+                                                     Solution);
 template <>
-std::pair<OptimalSolution, std::unique_ptr<Node>>
+std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<KnapsackHighs, DepthFirst, PruneAll>(const KnapsackHighs &,
                                                   const Bounds &,
-                                                  OptimalSolution);
+                                                  Solution);
 template <>
-std::pair<OptimalSolution, std::unique_ptr<Node>>
+std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<KnapsackHighs, BestBoundFirst, PruneNone>(const KnapsackHighs &,
                                                        const Bounds &,
-                                                       OptimalSolution);
+                                                       Solution);
 
 template <>
-std::pair<OptimalSolution, std::unique_ptr<Node>>
+std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<KnapsackHighs, BestBoundFirst, PruneUntill>(const KnapsackHighs &,
                                                          const Bounds &,
-                                                         OptimalSolution);
+                                                         Solution);
 
 template <>
-std::pair<OptimalSolution, std::unique_ptr<Node>>
+std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<KnapsackHighs, BestBoundFirst, PruneAll>(const KnapsackHighs &,
                                                       const Bounds &,
-                                                      OptimalSolution);
+                                                      Solution);

@@ -11,15 +11,15 @@
  */
 template <typename T, typename Order, template <typename> typename Prune>
 const void core_solve_choose(const T &problem, Bounds &bounds,
-                             OptimalSolution &opt, std::unique_ptr<Node> &node,
+                             Solution &opt, std::unique_ptr<Node> &node,
                              std::set<ExploreNode, Order> &subproblems);
 
 template <typename T, typename Order, template <typename> typename Prune>
-std::pair<OptimalSolution, std::unique_ptr<Node>>
+std::pair<Solution, std::unique_ptr<Node>>
 branch_bound(const T &problem, const Bounds &bounds,
-             const OptimalSolution start_opt = OptimalSolution()) {
+             const Solution start_opt = Solution()) {
 
-  OptimalSolution opt_sol{start_opt};
+  Solution opt_sol{start_opt};
   Bounds st_bounds{bounds};
 
   std::set<ExploreNode, Order> active_problems;
@@ -56,9 +56,9 @@ branch_bound(const T &problem, const Bounds &bounds,
 
 template <typename T, typename Order, template <typename> typename Prune>
 const void core_solve_choose(const T &problem, Bounds &bounds,
-                             OptimalSolution &opt, std::unique_ptr<Node> &node,
+                             Solution &opt, std::unique_ptr<Node> &node,
                              std::set<ExploreNode, Order> &subproblems) {
-  OptimalSolution current_sol{problem.solve_relaxed(bounds)};
+  Solution current_sol{problem.solve_relaxed(bounds)};
   node.reset(new Node(current_sol.value));
   if (!current_sol.success)
     return;

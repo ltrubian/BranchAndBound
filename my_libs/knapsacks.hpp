@@ -23,13 +23,13 @@ struct Knapsack {
    */
   explicit Knapsack(std::size_t v, double m, std::size_t n, std::size_t seed);
 
-  const OptimalSolution solve_relaxed(const Bounds &bounds) const;
-  const OptimalSolution solve_integer_naive(const Bounds &bounds) const;
-  const OptimalSolution solve_integer_guess(const Bounds &bounds) const;
+  const Solution solve_relaxed(const Bounds &bounds) const;
+  const Solution solve_integer_naive(const Bounds &bounds) const;
+  const Solution solve_integer_guess(const Bounds &bounds) const;
 
   const double objective(const std::vector<double> &solution) const;
 
-  const bool is_feasible(const OptimalSolution&) const;
+  const bool is_feasible(const Solution&) const;
 };
 
 std::ostream &operator<<(std::ostream &os, Knapsack &item);

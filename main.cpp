@@ -16,7 +16,7 @@
 auto select_start_opt(const Knapsack &prob, const Bounds &bounds, int select) {
   switch (select) {
   case 0:
-    return OptimalSolution();
+    return Solution();
   case 1:
     return prob.solve_integer_naive(bounds);
   case 2:
@@ -26,7 +26,7 @@ auto select_start_opt(const Knapsack &prob, const Bounds &bounds, int select) {
   }
 }
 auto select_solver_variant(const Knapsack &prob, const Bounds &bounds,
-                           const OptimalSolution start_opt, int select) {
+                           const Solution start_opt, int select) {
   auto time_it = [&](auto F) {
     auto t0 = std::chrono::high_resolution_clock::now();
     auto [opt, root] = F(prob, bounds, start_opt);
@@ -108,7 +108,7 @@ auto parser(int argc, char *argv[]) {
   std::bitset<6> settings;
   std::string flags{"-s-n-f-p-optnone"};
   std::size_t seed{di(rd)}, n{50}, first{3}, prune{1};
-  OptimalSolution opt{};
+  Solution opt{};
   Knapsack problem(0);
   std::string first_arg;
   if (argc >= 2) {
@@ -172,7 +172,7 @@ auto parser(int argc, char *argv[]) {
       }
       break;
     case 8:
-      opt = OptimalSolution();
+      opt = Solution();
       settings.set(sOptSol);
       break;
     default:

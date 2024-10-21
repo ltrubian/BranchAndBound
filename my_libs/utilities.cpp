@@ -7,7 +7,7 @@
 
 //typedef double double;
 
-bool OptimalSolution::is_integer() const {
+bool Solution::is_integer() const {
   double integral{0.f}, fractional{0.f};
   for (auto &x : this->solution) {
     fractional = std::modf(x, &integral);
@@ -18,7 +18,7 @@ bool OptimalSolution::is_integer() const {
   return true;
 }
 
-std::ostream &operator<<(std::ostream &os, OptimalSolution &item) {
+std::ostream &operator<<(std::ostream &os, Solution &item) {
   os << item.value << "\n";
   for (auto &i : item.solution) {
     os << i << "\n";
@@ -26,7 +26,7 @@ std::ostream &operator<<(std::ostream &os, OptimalSolution &item) {
   return os;
 };
 
-std::istream &operator>>(std::istream &is, OptimalSolution &item) {
+std::istream &operator>>(std::istream &is, Solution &item) {
   is >> item.value;
   while (is) {
     item.solution.emplace_back(0.);

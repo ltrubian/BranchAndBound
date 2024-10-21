@@ -42,8 +42,8 @@ Knapsack::Knapsack(std::size_t v,double m, std::size_t n, std::size_t seed)
   this->capacity = std::ceil(tmp / 3);
 };
 
-const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
-  OptimalSolution opt_sol{};
+const Solution Knapsack::solve_relaxed(const Bounds &bounds) const {
+  Solution opt_sol{};
   double correct_capacity{this->capacity -
                          std::inner_product(std::begin(bounds.lower),
                                             std::end(bounds.lower),
@@ -85,18 +85,18 @@ const OptimalSolution Knapsack::solve_relaxed(const Bounds &bounds) const {
 
   return opt_sol;
 }
-const OptimalSolution
+const Solution
 Knapsack::solve_integer_naive(const Bounds &bounds) const {
-  OptimalSolution opt{this->solve_relaxed(bounds)};
+  Solution opt{this->solve_relaxed(bounds)};
   std::for_each(opt.solution.begin(), opt.solution.end(),
                 [](double &x) { x = std::floor(x); });
   opt.value = this->objective(opt.solution);
   return opt;
 };
 
-const OptimalSolution
+const Solution
 Knapsack::solve_integer_guess(const Bounds &bounds) const {
-  OptimalSolution opt_sol{};
+  Solution opt_sol{};
   double correct_capacity{this->capacity -
                          std::inner_product(std::begin(bounds.lower),
                                             std::end(bounds.lower),
@@ -142,7 +142,7 @@ const double Knapsack::objective(const std::vector<double> &solution) const {
   return std::inner_product(solution.begin(), solution.end(), prices.begin(), 0.);
 }
 
-const bool Knapsack::is_feasible(const OptimalSolution& opt) const {
+const bool Knapsack::is_feasible(const Solution& opt) const {
   return std::inner_product(weights.begin(), weights.end(), opt.solution.begin(), 0.) <= this->capacity;
 };
 
@@ -166,32 +166,32 @@ std::istream &operator>>(std::istream &is, Knapsack &item) {
 };
 
 template <>
-std::pair<OptimalSolution, std::unique_ptr<Node>>
+std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<Knapsack, DepthFirst, PruneNone>(const Knapsack &, const Bounds &,
-                                              OptimalSolution);
+                                              Solution);
 
 template <>
-std::pair<OptimalSolution, std::unique_ptr<Node>>
+std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<Knapsack, DepthFirst, PruneUntill>(const Knapsack &,
                                                 const Bounds &,
-                                                OptimalSolution);
+                                                Solution);
 template <>
-std::pair<OptimalSolution, std::unique_ptr<Node>>
+std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<Knapsack, DepthFirst, PruneAll>(const Knapsack &, const Bounds &,
-                                             OptimalSolution);
+                                             Solution);
 template <>
-std::pair<OptimalSolution, std::unique_ptr<Node>>
+std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<Knapsack, BestBoundFirst, PruneNone>(const Knapsack &,
                                                   const Bounds &,
-                                                  OptimalSolution);
+                                                  Solution);
 
 template <>
-std::pair<OptimalSolution, std::unique_ptr<Node>>
+std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<Knapsack, BestBoundFirst, PruneUntill>(const Knapsack &,
                                                     const Bounds &,
-                                                    OptimalSolution);
+                                                    Solution);
 template <>
-std::pair<OptimalSolution, std::unique_ptr<Node>>
+std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<Knapsack, BestBoundFirst, PruneAll>(const Knapsack &,
                                                  const Bounds &,
-                                                 OptimalSolution);
+                                                 Solution);

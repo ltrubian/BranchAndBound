@@ -30,8 +30,8 @@ Bounds random_bounds(std::size_t n, std::size_t seed) {
 };
 
 template <typename T>
-std::pair<OptimalSolution, std::unique_ptr<Node>> select_solver_variant(const T &prob, Bounds &bounds,
-                                      int select, OptimalSolution opt = OptimalSolution()) {
+std::pair<Solution, std::unique_ptr<Node>> select_solver_variant(const T &prob, Bounds &bounds,
+                                      int select, Solution opt = Solution()) {
   switch (select) {
   case 0:
     return branch_bound<T, DepthFirst, PruneNone>(prob, bounds, opt);
@@ -128,7 +128,7 @@ TEST_CASE("knapsack: all assembled") {
     Knapsack problem{v, m, n, seed};
     KnapsackHighs problem_highs(problem);
     Bounds bounds{n, 0.f, 1.f};
-    OptimalSolution opt = problem.solve_integer_naive(bounds);
+    Solution opt = problem.solve_integer_naive(bounds);
     int selection = GENERATE(range(0, 6));
     auto [sol_my, root] = select_solver_variant(problem, bounds, selection, opt);
     auto sol_hi{problem_highs.solve_integer(bounds)};
@@ -142,7 +142,7 @@ TEST_CASE("knapsack: all assembled") {
     Knapsack problem{v, m, n, seed};
     KnapsackHighs problem_highs(problem);
     Bounds bounds{n, 0.f, 1.f};
-    OptimalSolution opt = problem.solve_integer_guess(bounds);
+    Solution opt = problem.solve_integer_guess(bounds);
     int selection = GENERATE(range(0, 6));
     auto [sol_my, root] = select_solver_variant(problem, bounds, selection, opt);
     auto sol_hi{problem_highs.solve_integer(bounds)};
