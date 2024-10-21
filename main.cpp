@@ -6,9 +6,12 @@
 #include <chrono>
 #include <cmath>
 #include <fstream>
+#include <iomanip>
+#include <ios>
 #include <iostream>
 #include <random>
 #include <stdexcept>
+#include <string>
 
 auto select_start_opt(const Knapsack &prob, const Bounds &bounds, int select) {
   switch (select) {
@@ -76,9 +79,19 @@ auto benchmark(float v, float m) {
                  << opt.value << "," << real_opt.value << "," // compare opt_sol
                  << std::to_string(real_opt.value == opt.value) << "," //
                  << d_t << std::endl;
+          int barWidth = 70;
+          double progress{(n_test * 18. + sopt * 6 + solver) / (10. * 18.)};
+          std::cout << "size:\t" << N << "\tn° test:\t" << n_test + 1 << "/"
+                    << 10 << "\t" << "["                         //
+                    << std::left << std::setw(barWidth)          //
+                    << std::string(barWidth * progress + 1, '=') //
+                    << "] "                                      //
+                    << std::ceil(progress * 100) << " %\r";
+          std::cout.flush();
         }
       }
     }
+    std::cout << std::endl;
   }
 }
 constexpr std::size_t sProblem{0};
@@ -183,64 +196,48 @@ int main(int argc, char *argv[]) { /*
                                  istrm >> tmp;
                                  std::cout << tmp;*/
   std::cout << "start benchmark" << std::endl;
-  //benchmark(5, 20.f);
+  benchmark(5, 20.f);
   std::cout << "end benchmark" << std::endl;
-  float progress = 0.0;
-while (progress <= 1.0) {
-    int barWidth = 70;
 
-    std::cout << "[";
-    int pos = barWidth * progress;
-    for (int i = 0; i < barWidth; ++i) {
-        if (i < pos) std::cout << "=";
-        else if (i == pos) std::cout << ">";
-        else std::cout << " ";
-    }
-    std::cout << "] " << int(progress * 100.0) << " %\r";
-    std::cout.flush();
+  /*
+    std::random_device rd;
+    std::uniform_int_distribution<std::size_t> di(0);
+    std::size_t n{10};
+    std::size_t s_k{di(rd)};
+    // s_k = 8722141901008443932;
+    // s_k = 3178488925260001586;
+    // s_k = 1104010588739253986;
+    // s_k = 12968802468751711930;
+    // s_k = 13607581404834641350;
+    // s_k = 12696456601695067945;
+    s_k = 1409891033439146690; // n = 300; ha oltre 3 milioni di nodi, circa 24
+    // secodi
+    auto [prob, start_opt, select, seed] = parser(argc, argv);
+    Bounds real(prob.prices.size(), 0.f, 1.f);
+    auto [opt, root, d] =
+        select_solver_variant(prob, real, start_opt, select);
+    std::cout << "seed:\t" << seed << std::endl;
+    std::cout << prob.prices.size() << "\t" << opt.success << "\t" << opt.nodes
+              << "\t" << opt.value << std::endl;
+    std::string filename{"test.json"};
+    std::ofstream istrm(filename);
+    istrm << root->to_json() << "\n";
+    std::cout << "\n best upper: " << root->best_upper_bound() << std::endl;
+    std::cout << opt.is_integer() << "\t" << prob.is_feasible(opt) << std::endl;
 
-    progress += 0.01; // for demonstration only
-}
-std::cout << std::endl;
-/*
-  std::random_device rd;
-  std::uniform_int_distribution<std::size_t> di(0);
-  std::size_t n{10};
-  std::size_t s_k{di(rd)};
-  // s_k = 8722141901008443932;
-  // s_k = 3178488925260001586;
-  // s_k = 1104010588739253986;
-  // s_k = 12968802468751711930;
-  // s_k = 13607581404834641350;
-  // s_k = 12696456601695067945;
-  s_k = 1409891033439146690; // n = 300; ha oltre 3 milioni di nodi, circa 24
-  // secodi
-  auto [prob, start_opt, select, seed] = parser(argc, argv);
-  Bounds real(prob.prices.size(), 0.f, 1.f);
-  auto [opt, root, d] =
-      select_solver_variant(prob, real, start_opt, select);
-  std::cout << "seed:\t" << seed << std::endl;
-  std::cout << prob.prices.size() << "\t" << opt.success << "\t" << opt.nodes
-            << "\t" << opt.value << std::endl;
-  std::string filename{"test.json"};
-  std::ofstream istrm(filename);
-  istrm << root->to_json() << "\n";
-  std::cout << "\n best upper: " << root->best_upper_bound() << std::endl;
-  std::cout << opt.is_integer() << "\t" << prob.is_feasible(opt) << std::endl;
+    KnapsackHighs check{prob};
+    auto opt_highs = check.solve_integer(real);
+    std::cout << "highs value: " << opt_highs.value << std::endl;
 
-  KnapsackHighs check{prob};
-  auto opt_highs = check.solve_integer(real);
-  std::cout << "highs value: " << opt_highs.value << std::endl;
-
-  filename = "problem.txt";
-  std::ofstream pr_file(filename);
-  pr_file << prob;
-  filename = "solution_my.txt";
-  std::ofstream sol_my(filename);
-  sol_my << opt;
-  filename = "solution_hi.txt";
-  std::ofstream sol_hi(filename);
-  sol_hi << opt_highs;
-*/
+    filename = "problem.txt";
+    std::ofstream pr_file(filename);
+    pr_file << prob;
+    filename = "solution_my.txt";
+    std::ofstream sol_my(filename);
+    sol_my << opt;
+    filename = "solution_hi.txt";
+    std::ofstream sol_hi(filename);
+    sol_hi << opt_highs;
+  */
   return 0;
 }

@@ -2,7 +2,6 @@
 #include "Highs.h"
 #include "branch_and_bound.hpp"
 #include "utilities.hpp"
-#include <algorithm>
 #include <cstdio>
 #include <lp_data/HConst.h>
 #include <lp_data/HStruct.h>

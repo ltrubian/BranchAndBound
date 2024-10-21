@@ -4,6 +4,7 @@
 #include "Highs.h"
 #include "knapsacks.hpp"
 #include "utilities.hpp"
+#include <lp_data/HConst.h>
 
 /**
  * Class of the Knapsack problem, interface for HiGHS
@@ -14,7 +15,8 @@ struct KnapsackHighs {
 
   explicit KnapsackHighs(const Knapsack &model)
       : problem{HighsModel()}, highs{Highs()} {
-    problem.lp_.num_col_ = model.prices.size();
+    auto problem_size = model.prices.size();
+    problem.lp_.num_col_ = problem_size;
     problem.lp_.num_row_ = 1;
     problem.lp_.sense_ = ObjSense::kMaximize;
     problem.lp_.col_cost_ = model.prices;
@@ -24,19 +26,19 @@ struct KnapsackHighs {
     problem.lp_.row_lower_ = {0.0};
     problem.lp_.row_upper_ = {model.capacity};
     problem.lp_.a_matrix_.num_row_ = 1;
-    problem.lp_.a_matrix_.num_col_ = model.prices.size();
+    problem.lp_.a_matrix_.num_col_ = problem_size;
     problem.lp_.a_matrix_.format_ = MatrixFormat::kColwise;
-    std::vector<int> ind(model.prices.size() + 1);
+    std::vector<int> ind(problem_size + 1);
     std::iota(ind.begin(), ind.end(), 0);
     problem.lp_.a_matrix_.start_ = ind;
-    problem.lp_.a_matrix_.index_ = std::vector<int>(model.prices.size(), 0);
+    problem.lp_.a_matrix_.index_ = std::vector<int>(problem_size, 0);
     problem.lp_.a_matrix_.value_ = model.weights;
     // std::vector<double>(std::begin(model.weights), std::end(model.weights));
 
-    problem.lp_.col_lower_ = std::vector<double>(model.prices.size());
-    problem.lp_.col_upper_ = std::vector<double>(model.prices.size());
-    problem.lp_.integrality_ = std::vector<HighsVarType>(
-        model.prices.size(), HighsVarType::kContinuous);
+    problem.lp_.col_lower_ = std::vector<double>(problem_size);
+    problem.lp_.col_upper_ = std::vector<double>(problem_size);
+    problem.lp_.integrality_ =
+        std::vector<HighsVarType>(problem_size, HighsVarType::kContinuous);
 
     HighsStatus return_status;
 
@@ -61,8 +63,8 @@ struct KnapsackHighs {
     HighsStatus return_status;
     std::vector<HighsVarType> opt_integrality(bounds.lower.size(),
                                               HighsVarType::kInteger);
-    highs.changeColsIntegrality(0, bounds.lower.size() - 1,
-                                opt_integrality.data());
+    return_status = highs.changeColsIntegrality(0, bounds.lower.size() - 1,
+                                                opt_integrality.data());
     assert(return_status == HighsStatus::kOk);
     return this->solve_relaxed(bounds);
   }
