@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <list>
 
 struct Solution {
   bool success;
@@ -111,17 +112,18 @@ struct ExploreNode {
       : node_id(id), value(node.value), bounds(bounds), node(node){};
 };
 
-struct DepthFirst {
-  inline bool operator()(const ExploreNode &a, const ExploreNode &b) const {
-    return a.node_id < b.node_id;
-  };
-};
+
+/**
+ * Order to explore the queue starting from the largest upper bound available
+ */
 struct BestBoundFirst {
   inline bool operator()(const ExploreNode &a, const ExploreNode &b) const {
-    return (a.value < b.value) || (a.value == b.value && a.node_id > b.node_id);
+    return (a.value < b.value) || (a.value == b.value && a.node_id < b.node_id);
   }
 };
-
+/**
+ * thin layer over the set
+ */
 struct QueueBestBound {
   std::set<ExploreNode, BestBoundFirst> queue;
 
@@ -147,7 +149,7 @@ struct QueueBestBound {
 };
 
 struct QueueDepth {
-  std::set<ExploreNode, DepthFirst> queue;
+  std::list<ExploreNode> queue;
 
   void prune(const double &value) {
     for (auto ex_node{queue.begin()}; ex_node != queue.end();) {
@@ -171,12 +173,15 @@ struct QueueDepth {
   std::size_t size() const { return queue.size(); }
 
   ExploreNode take_next() {
-    return std::move(queue.extract(--queue.end()).value());
+    ExploreNode tmp{std::move(queue.front())};
+    queue.pop_front();
+    return tmp;
   };
 
   template <class... Args> void emplace(Args &&...args) {
-    queue.emplace(std::forward<Args>(args)...);
+    queue.emplace_front(std::forward<Args>(args)...);
   };
 };
 
 #endif // __UTILITIES__LT
+
