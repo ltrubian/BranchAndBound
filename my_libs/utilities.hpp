@@ -5,12 +5,12 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <list>
 #include <memory>
 #include <set>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <list>
 
 struct Solution {
   bool success;
@@ -112,9 +112,11 @@ struct ExploreNode {
       : node_id(id), value(node.value), bounds(bounds), node(node){};
 };
 
-
 /**
  * Order to explore the queue starting from the largest upper bound available
+ * Due to complications in "pruning" the set using reverse iterator, the
+ * smallest value is in the front for easy removal while the largest is at the
+ * end
  */
 struct BestBoundFirst {
   inline bool operator()(const ExploreNode &a, const ExploreNode &b) const {
@@ -122,23 +124,26 @@ struct BestBoundFirst {
   }
 };
 /**
- * thin layer over the set
+ * thin wrapper over the set container
  */
 struct QueueBestBound {
   std::set<ExploreNode, BestBoundFirst> queue;
 
   void prune(const double &value) {
-    auto i{queue.begin()};
-    while (i != queue.end() && i->value <= value) {
-      i = queue.erase(i);
+    auto ex_node{queue.begin()};
+    while (ex_node != queue.end() && ex_node->value <= value) {
+      ex_node = queue.erase(ex_node);
     }
   };
 
-  double max_value() const { return queue.begin()->value; };
+  double max_value() const { return (--queue.end())->value; };
 
   bool empty() const { return queue.empty(); };
   std::size_t size() const { return queue.size(); }
 
+  /**
+   * Take the node with the largest value available
+   */
   ExploreNode take_next() {
     return std::move(queue.extract(--queue.end()).value());
   };
@@ -148,6 +153,9 @@ struct QueueBestBound {
   };
 };
 
+/**
+ * Thin wrapper over the list container to simulate stack
+ */
 struct QueueDepth {
   std::list<ExploreNode> queue;
 
@@ -162,7 +170,7 @@ struct QueueDepth {
 
   double max_value() const {
     double max{-std::numeric_limits<double>::infinity()};
-    for (auto ex_node{queue.begin()}; ex_node!= queue.end(); ++ex_node) {
+    for (auto ex_node{queue.begin()}; ex_node != queue.end(); ++ex_node) {
       if (ex_node->value > max)
         max = ex_node->value;
     }
@@ -184,4 +192,3 @@ struct QueueDepth {
 };
 
 #endif // __UTILITIES__LT
-

@@ -27,9 +27,7 @@ branch_bound(const T &problem, const Bounds &bounds,
   core_solve_choose<T, Queue>(problem, st_bounds, opt_sol, root,
                                      active_problems);
 
-  while (!active_problems.empty()) {
-    // std::cout << root->best_upper_bound() << std::endl;
-    root->best_upper_bound();
+  while (!active_problems.empty()  && opt_sol.gap >= 1) {
     ExploreNode current_prob = active_problems.take_next();
 
     for (auto i{0}; i < 2; ++i) {
@@ -43,10 +41,12 @@ branch_bound(const T &problem, const Bounds &bounds,
                                          active_problems);
     }
     current_prob.node.info.set(nExplored);
+    if (!active_problems.empty())
+      opt_sol.gap = active_problems.max_value() - opt_sol.value;
   }
   // in case the loop is stopped, active_problems could contains subproblems
   // to explore
-  opt_sol.success = active_problems.empty() &&
+  opt_sol.success = (active_problems.empty() || opt_sol.gap < 1)  &&
                     opt_sol.value != -std::numeric_limits<double>::infinity();
 
   return std::make_pair(std::move(opt_sol), std::move(root));

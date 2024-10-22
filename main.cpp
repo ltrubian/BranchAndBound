@@ -98,8 +98,8 @@ auto parser(int argc, char *argv[]) {
   std::uniform_int_distribution<std::size_t> di(0);
   auto i{1};
   std::bitset<6> settings;
-  std::string flags{"-s-n-f-p-optnone"};
-  std::size_t seed{di(rd)}, n{50}, first{3}, prune{1};
+  std::string flags{"-s-n-f-optnone"};
+  std::size_t seed{di(rd)}, n{50}, first{1};
   Solution opt{};
   Knapsack problem(0);
   std::string first_arg;
@@ -145,25 +145,11 @@ auto parser(int argc, char *argv[]) {
         if (i_f == flags.npos)
           throw std::invalid_argument("-f option require 'd' (depth-first) or "
                                       "'bb' (best-bound-first) as input");
-        first = i_f * 3;
+        first = i_f;
         settings.set(sFirst);
       }
       break;
     case 6:
-      if (settings.test(sPrune))
-        std::clog
-            << "[WARNING] prune approach already provided: this is ignored"
-            << std::endl;
-      else {
-        int i_p = std::string("nua").find(argv[i]);
-        if (i_p == flags.npos)
-          throw std::invalid_argument("-p option require 'n' (no prune) or "
-                                      "'u' (untill) or 'a' (all) as input");
-        prune = i_p;
-        settings.set(sPrune);
-      }
-      break;
-    case 8:
       opt = Solution();
       settings.set(sOptSol);
       break;
@@ -178,7 +164,7 @@ auto parser(int argc, char *argv[]) {
   if (!settings.test(sOptSol)) {
     opt = problem.solve_integer_guess(Bounds(problem.prices.size(), 0.f, 1.f));
   }
-  return std::make_tuple(problem, opt, first + prune, seed);
+  return std::make_tuple(problem, opt, first, seed);
 };
 
 int main(int argc, char *argv[]) { /*
@@ -188,10 +174,10 @@ int main(int argc, char *argv[]) { /*
                                  istrm >> tmp;
                                  std::cout << tmp;*/
   std::cout << "start benchmark" << std::endl;
-  benchmark(5, 20.f);
+  //benchmark(5, 20.f);
   std::cout << "end benchmark" << std::endl;
 
-  /*
+
     std::random_device rd;
     std::uniform_int_distribution<std::size_t> di(0);
     std::size_t n{10};
@@ -214,7 +200,7 @@ int main(int argc, char *argv[]) { /*
     std::string filename{"test.json"};
     std::ofstream istrm(filename);
     istrm << root->to_json() << "\n";
-    std::cout << "\n best upper: " << root->best_upper_bound() << std::endl;
+    std::cout << "\n gap: " << opt.gap << std::endl;
     std::cout << opt.is_integer() << "\t" << prob.is_feasible(opt) << std::endl;
 
     KnapsackHighs check{prob};
@@ -230,6 +216,6 @@ int main(int argc, char *argv[]) { /*
     filename = "solution_hi.txt";
     std::ofstream sol_hi(filename);
     sol_hi << opt_highs;
-  */
+
   return 0;
 }
