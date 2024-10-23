@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+
 struct Solution {
   bool success;
   std::size_t nodes;
@@ -65,31 +66,23 @@ struct Bounds {
   };
 };
 
-constexpr const std::size_t nSuccess{0};
-constexpr const std::size_t nRelevant{1};
-constexpr const std::size_t nExplored{2};
-constexpr const std::size_t nInteger{3};
 
 struct Node {
   double value;
   std::size_t b_index;
   double
       b_value; // for the knapsack it is always 0, but it is not so in general
-  std::bitset<4> info;
   std::unique_ptr<Node> childs[2];
 
   Node()
       : value(-std::numeric_limits<double>::infinity()), b_index{0},
-        b_value{0.f}, info{}, childs{nullptr, nullptr} {};
+        b_value{0.f}, childs{nullptr, nullptr} {};
   Node(double value) : Node() { this->value = value; };
   ~Node(){};
-
-  double best_upper_bound() const;
 
   std::string to_json() const {
     std::string js = "{";
     js += "\"value\": \"" + std::to_string(value) + "\",";
-    js += "\"info\" : \"" + info.to_string() + "\"";
     if (childs[0] != nullptr || childs[1] != nullptr) {
       js += ",\"childs\": [ ";
       if (childs[0] != nullptr)
@@ -131,7 +124,7 @@ struct QueueBestBound {
 
   void prune(const double &value) {
     auto ex_node{queue.begin()};
-    while (ex_node != queue.end() && ex_node->value <= value) {
+    while (ex_node != queue.end() && ex_node->value < value + 1) {
       ex_node = queue.erase(ex_node);
     }
   };
@@ -161,7 +154,7 @@ struct QueueDepth {
 
   void prune(const double &value) {
     for (auto ex_node{queue.begin()}; ex_node != queue.end();) {
-      if (ex_node->value <= value)
+      if (ex_node->value < value + 1)
         ex_node = queue.erase(ex_node);
       else
         ++ex_node;

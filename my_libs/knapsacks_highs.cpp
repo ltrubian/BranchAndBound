@@ -44,10 +44,10 @@ template <>
 std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<KnapsackHighs, QueueDepth>(const KnapsackHighs &,
                                                    const Bounds &,
-                                                   Solution);
+                                                   Solution, std::chrono::seconds);
 
 template <>
 std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<KnapsackHighs, QueueBestBound>(const KnapsackHighs &,
                                                      const Bounds &,
-                                                     Solution);
+                                                     Solution, std::chrono::seconds);

@@ -29,7 +29,7 @@ auto select_solver_variant(const Knapsack &prob, const Bounds &bounds,
                            const Solution start_opt, int select) {
   auto time_it = [&](auto F) {
     auto t0 = std::chrono::high_resolution_clock::now();
-    auto [opt, root] = F(prob, bounds, start_opt);
+    auto [opt, root] = F(prob, bounds, start_opt, std::chrono::seconds(300));
     auto t1 = std::chrono::high_resolution_clock::now();
     auto d =
         std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();

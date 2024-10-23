@@ -3,21 +3,24 @@
 
 #include "utilities.hpp"
 #include <cmath>
+
+#include <chrono>
 #include <memory>
 #include <utility>
+using namespace std::chrono_literals;
 /**
  * Aim:
  */
 template <typename T, typename Queue>
-const void core_solve_choose(const T &problem, Bounds &bounds,
-                             Solution &opt, std::unique_ptr<Node> &node,
-                             Queue &subproblems);
+const void core_solve_choose(const T &problem, Bounds &bounds, Solution &opt,
+                             std::unique_ptr<Node> &node, Queue &subproblems);
 
 template <typename T, typename Queue>
 std::pair<Solution, std::unique_ptr<Node>>
 branch_bound(const T &problem, const Bounds &bounds,
-             const Solution start_opt = Solution()) {
-
+             const Solution start_opt = Solution(),
+             std::chrono::seconds max_time = std::chrono::seconds(300)) {
+  auto stop = std::chrono::high_resolution_clock::now() + max_time;
   Solution opt_sol{start_opt};
   Bounds st_bounds{bounds};
 
@@ -25,9 +28,10 @@ branch_bound(const T &problem, const Bounds &bounds,
 
   std::unique_ptr<Node> root{new Node()};
   core_solve_choose<T, Queue>(problem, st_bounds, opt_sol, root,
-                                     active_problems);
+                              active_problems);
 
-  while (!active_problems.empty()  && opt_sol.gap >= 1) {
+  while (!active_problems.empty() &&
+         std::chrono::high_resolution_clock::now() < stop) {
     ExploreNode current_prob = active_problems.take_next();
 
     for (auto i{0}; i < 2; ++i) {
@@ -37,35 +41,35 @@ branch_bound(const T &problem, const Bounds &bounds,
       ++opt_sol.nodes;
       // solve the relaxed problem
       core_solve_choose<T, Queue>(problem, current_bounds, opt_sol,
-                                         current_prob.node.childs[i],
-                                         active_problems);
+                                  current_prob.node.childs[i], active_problems);
     }
-    current_prob.node.info.set(nExplored);
+
     if (!active_problems.empty())
       opt_sol.gap = active_problems.max_value() - opt_sol.value;
   }
   // in case the loop is stopped, active_problems could contains subproblems
   // to explore
-  opt_sol.success = (active_problems.empty() || opt_sol.gap < 1)  &&
+  opt_sol.success = active_problems.empty() &&
                     opt_sol.value != -std::numeric_limits<double>::infinity();
+  if (opt_sol.success)
+    opt_sol.gap = 0.;
 
   return std::make_pair(std::move(opt_sol), std::move(root));
 }
 
 template <typename T, typename Queue>
-const void core_solve_choose(const T &problem, Bounds &bounds,
-                             Solution &opt, std::unique_ptr<Node> &node,
-                             Queue &subproblems) {
+const void core_solve_choose(const T &problem, Bounds &bounds, Solution &opt,
+                             std::unique_ptr<Node> &node, Queue &subproblems) {
   Solution current_sol{problem.solve_relaxed(bounds)};
   node.reset(new Node(current_sol.value));
   if (!current_sol.success)
     return;
 
-  node->info.set(nSuccess);
-  if (opt.value >= current_sol.value)
+
+  if (opt.value + 1 > current_sol.value)
     return;
 
-  node->info.set(nRelevant);
+
   // search for the first non integer value of the solution
   double integral{0.f}, fractional{0.f};
   auto index{0};
@@ -80,7 +84,6 @@ const void core_solve_choose(const T &problem, Bounds &bounds,
   if (fractional == 0.f) {
     opt.value = current_sol.value;
     opt.solution = current_sol.solution;
-    node->info.set(nInteger);
     subproblems.prune(opt.value);
   } else {
     node->b_index = index;
