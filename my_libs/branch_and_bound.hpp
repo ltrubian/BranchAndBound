@@ -7,32 +7,48 @@
 #include <chrono>
 #include <memory>
 #include <utility>
-using namespace std::chrono_literals;
+
 /**
- * Aim:
+ * Given a subproblem, solve it, check if it is integer and therefore prune the
+ * current queue of subproblems or not and add it to the same queue
+ * input:
+ *  - problem       : reference to the original problem
+ *  - bounds        : bounds of the current subproblem
+ *  - opt           : current optimal solution
+ *  - node          : node of the tree of subproblems which correspond the
+ *                    current one
+ *  - subproblems   : queue of active subproblems
  */
 template <typename T, typename Queue>
-const void core_solve_choose(const T &problem, Bounds &bounds, Solution &opt,
-                             std::unique_ptr<Node> &node, Queue &subproblems);
+const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
+                           std::unique_ptr<Node> &node, Queue &subproblems);
 
+/**
+ *
+ */
 template <typename T, typename Queue>
 std::pair<Solution, std::unique_ptr<Node>>
 branch_bound(const T &problem, const Bounds &bounds,
              const Solution start_opt = Solution(),
              std::chrono::seconds max_time = std::chrono::seconds(300)) {
+  // set the timer
   auto stop = std::chrono::high_resolution_clock::now() + max_time;
+  // set the initial values
   Solution opt_sol{start_opt};
   Bounds st_bounds{bounds};
+  Queue active_subproblems;
 
-  Queue active_problems;
-
+  // Initialize the root of the tree of all the subproblems that this algorithm
+  // will consider
   std::unique_ptr<Node> root{new Node()};
-  core_solve_choose<T, Queue>(problem, st_bounds, opt_sol, root,
-                              active_problems);
 
-  while (!active_problems.empty() &&
+  prune_or_branch<T, Queue>(problem, st_bounds, opt_sol, root,
+                            active_subproblems);
+
+  while (!active_subproblems.empty() &&
          std::chrono::high_resolution_clock::now() < stop) {
-    ExploreNode current_prob = active_problems.take_next();
+
+    ExploreNode current_prob = active_subproblems.take_next();
 
     for (auto i{0}; i < 2; ++i) {
       Bounds current_bounds{current_prob.bounds};
@@ -40,35 +56,37 @@ branch_bound(const T &problem, const Bounds &bounds,
           current_prob.node.b_value + 1. * i;
       ++opt_sol.nodes;
       // solve the relaxed problem
-      core_solve_choose<T, Queue>(problem, current_bounds, opt_sol,
-                                  current_prob.node.childs[i], active_problems);
+      prune_or_branch<T, Queue>(problem, current_bounds, opt_sol,
+                                current_prob.node.childs[i],
+                                active_subproblems);
     }
 
-    if (!active_problems.empty())
-      opt_sol.gap = active_problems.max_value() - opt_sol.value;
+    if (!active_subproblems.empty())
+      opt_sol.gap = active_subproblems.max_value() - opt_sol.value;
   }
-  // in case the loop is stopped, active_problems could contains subproblems
+  // in case the loop is stopped, active_subproblems could contains subproblems
   // to explore
-  opt_sol.success = active_problems.empty() &&
-                    opt_sol.value != -std::numeric_limits<double>::infinity();
-  if (opt_sol.success)
-    opt_sol.gap = 0.;
+  opt_sol.success =
+      active_subproblems.empty() && opt_sol.value != start_opt.value;
 
   return std::make_pair(std::move(opt_sol), std::move(root));
 }
 
 template <typename T, typename Queue>
-const void core_solve_choose(const T &problem, Bounds &bounds, Solution &opt,
-                             std::unique_ptr<Node> &node, Queue &subproblems) {
+const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
+                           std::unique_ptr<Node> &node, Queue &subproblems) {
+
+  // solve subproblem with specific bounds and associate a new Node
   Solution current_sol{problem.solve_relaxed(bounds)};
   node.reset(new Node(current_sol.value));
+
+  // Unfeasible subproblem
   if (!current_sol.success)
     return;
-
-
+  // Irrelevant subproblem: its best (eventual) integer solution is lower than
+  // or equal to the current one
   if (opt.value + 1 > current_sol.value)
     return;
-
 
   // search for the first non integer value of the solution
   double integral{0.f}, fractional{0.f};
@@ -80,12 +98,16 @@ const void core_solve_choose(const T &problem, Bounds &bounds, Solution &opt,
       break;
     }
   }
-
+  // If the solution is integer (that is higher than the current one it has
+  // already been checked) update the solution and prune the queue of
+  // subproblems
   if (fractional == 0.f) {
     opt.value = current_sol.value;
     opt.solution = current_sol.solution;
     subproblems.prune(opt.value);
-  } else {
+  }
+  // Update the node and add it to the queue of subproblems
+  else {
     node->b_index = index;
     node->b_value = integral;
     subproblems.emplace(opt.nodes, bounds, *node);

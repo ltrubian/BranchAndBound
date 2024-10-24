@@ -100,7 +100,6 @@ TEST_CASE("knapsack: all assembled") {
     REQUIRE(sol_my.success == sol_hi.success);
     INFO("n: " << n << "\tselection: "<< selection << "\tseed: " << seed );
     CHECK_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
-    // CHECK(sol_my.gap < 1. );
   }
   SECTION("default bounds, random problems") {
     std::size_t seed = GENERATE(take(5, random(0, 100000)));
@@ -115,7 +114,6 @@ TEST_CASE("knapsack: all assembled") {
 
     INFO("n: " << n << "\tselection: "<< selection << "\tseed: " << seed );
     CHECK_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
-    // CHECK(sol_my.gap < 1. );
   }
     SECTION("default bounds, random problems, opt naive on") {
     std::size_t seed = GENERATE(take(5, random(0, 100000)));
@@ -130,7 +128,6 @@ TEST_CASE("knapsack: all assembled") {
     REQUIRE(sol_my.success == sol_hi.success);
     INFO("n: " << n << "\tselection: "<< selection << "\tseed: " << seed );
     CHECK_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
-    // CHECK(sol_my.gap < 1. );
   }
     SECTION("default bounds, random problems, opt on") {
     std::size_t seed = GENERATE(take(5, random(0, 100000)));
@@ -145,7 +142,6 @@ TEST_CASE("knapsack: all assembled") {
     REQUIRE(sol_my.success == sol_hi.success);
     INFO("n: " << n << "\tselection: "<< selection << "\tseed: " << seed );
     CHECK_THAT(sol_my.value, Catch::Matchers::WithinAbs(sol_hi.value, TOL));
-    // CHECK(sol_my.gap < 1. );
   }
   SECTION("random bounds") {
     std::size_t seed = GENERATE(take(5, random(0, 100000)));

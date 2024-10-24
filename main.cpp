@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) { /*
                                  istrm >> tmp;
                                  std::cout << tmp;*/
   std::cout << "start benchmark" << std::endl;
-  //benchmark(5, 20.f);
+  benchmark(5, 20.f);
   std::cout << "end benchmark" << std::endl;
 
 
