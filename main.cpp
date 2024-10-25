@@ -49,7 +49,7 @@ auto benchmark(float v, float m) {
   std::uniform_int_distribution<std::size_t> di(0);
   std::string filename{"bench-" + std::to_string(di(rd)) + ".csv"};
   std::ofstream result(filename);
-  auto max_n_test{100};
+  auto max_n_test{10};
   for (auto N{40}; N < 201; N += 10) {
     std::vector<double> time_res[3][2];
     std::vector<double> node_res[3][2];
@@ -79,20 +79,25 @@ auto benchmark(float v, float m) {
           node_res[sopt][solver].emplace_back(opt.nodes);
           int barWidth = 70;
           double progress{(n_test * 6. + sopt * 2 + solver) / (max_n_test * 6.)};
-          std::cout << "size:\t" << N << "\tn° test:\t" << n_test + 1 << "/"
+		  std::cout << std::setprecision(3);
+          std::cout << "size:\t" << N << "\tn test:\t" << n_test + 1 << "/"
                     << max_n_test << "\t" << "["                         //
                     << std::left << std::setw(barWidth)          //
-                    << std::string(barWidth * progress + 1, '=') //
+                    << std::string(barWidth * progress + 2, '=') //
                     << "] "                                      //
-                    << std::ceil(progress * 100) << " %\r";
+                    << std::ceil(progress * 100) + 1 << " %\r";
           std::cout.flush();
         }
       }
     }
     std::cout << std::endl;
-    for (auto solver{0}; solver < 2; ++solver) {
-      std::cout << "solver: " << solver << "\n";
-      for (auto sopt{0}; sopt < 3; ++sopt) {
+	
+	std::cout << std::right << std::setprecision(2) 
+			  << std::setw(30) << "time" << std::setw(40) << "nodes" << std::endl;
+	std::cout << std::setw(15) << "depth" << std::setw(15) << "best bound" << "\t"
+			  << std::setw(20) << "depth" << std::setw(20) << "best bound" << std::endl;
+    for (auto sopt{0}; sopt < 3; ++sopt) {
+		for (auto solver{0}; solver < 2; ++solver) {
         double mean = std::accumulate(time_res[sopt][solver].begin(),
                                       time_res[sopt][solver].end(), 0.) /
                       max_n_test;
@@ -100,20 +105,24 @@ auto benchmark(float v, float m) {
         double std_dev = std::sqrt(
             std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.) /
             max_n_test);
-        std::cout << "\tstart_opt: " << sopt << "\t" << mean << "(" << std_dev
-                  << ")\t\t";
-        mean = std::accumulate(node_res[sopt][solver].begin(),
+        std::cout << std::setw(15) << std::right << mean << "(" << std_dev
+					<< ")";
+		}
+		for (auto solver{0}; solver < 2; ++solver) {
+        auto mean = std::accumulate(node_res[sopt][solver].begin(),
                                node_res[sopt][solver].end(), 0.) /
                max_n_test;
-        diff = mean - node_res[sopt][solver];
-        std_dev = std::sqrt(
+        auto diff = mean - node_res[sopt][solver];
+        auto std_dev = std::sqrt(
             std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.) /
             max_n_test);
-        std::cout << mean << "(" << std_dev << ")\n";
-      }
+        std::cout << std::setw(20)<< std::right <<mean << "(" << std_dev << ")";
+			}
+			std::cout << std::endl;
+		}
+		
     }
   }
-}
 constexpr std::size_t sProblem{0};
 constexpr std::size_t sFirst{1};
 constexpr std::size_t sPrune{2};
@@ -203,7 +212,7 @@ int main(int argc, char *argv[]) { /*
                                  istrm >> tmp;
                                  std::cout << tmp;*/
   std::cout << "start benchmark" << std::endl;
-  //benchmark(5, 20.f);
+  benchmark(5, 20.f);
   std::cout << "end benchmark" << std::endl;
 
   std::random_device rd;

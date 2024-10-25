@@ -15,7 +15,7 @@ target_include_directories(main PUBLIC
 		"${PROJECT_SOURCE_DIR}/my_libs")
 
 
-set(HIGHS_DIR /usr/local/lib/cmake/highs)
+#set(HIGHS_DIR /usr/local/lib/cmake/highs)
 find_package(HIGHS REQUIRED)
 find_package(Threads REQUIRED)
 

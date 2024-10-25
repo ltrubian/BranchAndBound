@@ -22,7 +22,6 @@
 template <typename T, typename Queue>
 const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
                            std::unique_ptr<Node> &node, Queue &subproblems);
-
 /**
  *
  */
