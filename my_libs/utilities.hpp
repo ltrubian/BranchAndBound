@@ -71,19 +71,19 @@ struct Node {
   double
       b_value; // for the knapsack it is always 0, but it is not so in general
   std::unique_ptr<Node> childs[2];
-  const Node *parent;
+  const Node &parent;
 
-  Node(double value, Node* parent)
+  Node(double value, Node& parent)
       : value(value), b_index{0}, b_value{0.f}, childs{nullptr},
         parent(parent) {};
   ~Node(){};
 
   void initialize_bounds(Bounds &bounds) const {
-    if (parent == nullptr)
+    if (&parent == nullptr)
       return;
-    auto i{this ==  parent->childs[1].get()};
-    bounds[i][parent->b_index] = parent->b_value + 1. * i;
-    parent->initialize_bounds(bounds);
+    auto i{this ==  parent.childs[1].get()};
+    bounds[i][parent.b_index] = parent.b_value + 1. * i;
+    parent.initialize_bounds(bounds);
   };
 
   std::string to_json() const {

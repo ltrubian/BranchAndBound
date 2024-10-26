@@ -41,7 +41,7 @@ branch_bound(const T &problem, const Bounds &bounds,
   // Initialize the root of the tree of all the subproblems that this algorithm
   // will consider
   std::unique_ptr<Node> root{nullptr};
-  root.reset(new Node(0., root.get()));
+  root.reset(new Node(0., *root));
 
   prune_or_branch<T, Queue>(problem, st_bounds, opt_sol, root,
                             active_subproblems);
@@ -56,7 +56,7 @@ branch_bound(const T &problem, const Bounds &bounds,
       // current_prob.node.childs[i]->initialize_bounds(current_bounds);
       // current_bounds[i][current_prob.node.b_index] =
       //     current_prob.node.b_value + 1. * i;
-      current_prob.node.childs[i].reset(new Node(0., &current_prob.node));
+      current_prob.node.childs[i].reset(new Node(0., current_prob.node));
       current_prob.node.childs[i]->initialize_bounds(current_bounds);
       ++opt_sol.nodes;
       // solve the relaxed problem
