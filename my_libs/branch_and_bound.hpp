@@ -22,12 +22,12 @@
  */
 template <typename T, typename Queue>
 const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
-                           std::unique_ptr<Node> &node, Queue &subproblems);
+                           std::shared_ptr<Node> &node, Queue &subproblems);
 /**
  *
  */
 template <typename T, typename Queue>
-std::pair<Solution, std::unique_ptr<Node>>
+std::pair<Solution, std::shared_ptr<Node>>
 branch_bound(const T &problem, const Bounds &bounds,
              const Solution start_opt = Solution(),
              std::chrono::seconds max_time = std::chrono::seconds(300)) {
@@ -40,8 +40,8 @@ branch_bound(const T &problem, const Bounds &bounds,
 
   // Initialize the root of the tree of all the subproblems that this algorithm
   // will consider
-  std::unique_ptr<Node> root{nullptr};
-  root.reset(new Node(0., *root));
+  std::shared_ptr<Node> root{nullptr};
+  root.reset(new Node(0., nullptr));
 
   prune_or_branch<T, Queue>(problem, st_bounds, opt_sol, root,
                             active_subproblems);
@@ -52,16 +52,14 @@ branch_bound(const T &problem, const Bounds &bounds,
     ExploreNode current_prob = active_subproblems.take_next();
 
     for (auto i{0}; i < 2; ++i) {
-      Bounds current_bounds{current_prob.bounds};
-      // current_prob.node.childs[i]->initialize_bounds(current_bounds);
-      // current_bounds[i][current_prob.node.b_index] =
-      //     current_prob.node.b_value + 1. * i;
-      current_prob.node.childs[i].reset(new Node(0., current_prob.node));
-      current_prob.node.childs[i]->initialize_bounds(current_bounds);
+      Bounds current_bounds{bounds};
+
+      current_prob.node.lock()->childs[i].reset(new Node(0., current_prob.node.lock()));
+      current_prob.node.lock()->childs[i]->initialize_bounds(current_bounds);
       ++opt_sol.nodes;
       // solve the relaxed problem
       prune_or_branch<T, Queue>(problem, current_bounds, opt_sol,
-                                current_prob.node.childs[i],
+                                current_prob.node.lock()->childs[i],
                                 active_subproblems);
     }
 
@@ -78,7 +76,7 @@ branch_bound(const T &problem, const Bounds &bounds,
 
 template <typename T, typename Queue>
 const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
-                           std::unique_ptr<Node> &node, Queue &subproblems) {
+                           std::shared_ptr<Node> &node, Queue &subproblems) {
 
   // solve subproblem with specific bounds and associate a new Node
   Solution current_sol{problem.solve_relaxed(bounds)};
@@ -114,7 +112,7 @@ const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
   else {
     node->b_index = index;
     node->b_value = integral;
-    subproblems.emplace(opt.nodes, bounds, *node);
+    subproblems.emplace(opt.nodes, node);
   }
 }
 #endif // __BRANCH_BOUND__LT

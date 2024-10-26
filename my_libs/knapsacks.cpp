@@ -166,12 +166,12 @@ std::istream &operator>>(std::istream &is, Knapsack &item) {
 };
 
 template <>
-std::pair<Solution, std::unique_ptr<Node>>
+std::pair<Solution, std::shared_ptr<Node>>
 branch_bound<Knapsack, QueueDepth>(const Knapsack &, const Bounds &,
                                               Solution, std::chrono::seconds);
 
 template <>
-std::pair<Solution, std::unique_ptr<Node>>
+std::pair<Solution, std::shared_ptr<Node>>
 branch_bound<Knapsack, QueueBestBound>(const Knapsack &,
                                                 const Bounds &,
                                                 Solution, std::chrono::seconds);

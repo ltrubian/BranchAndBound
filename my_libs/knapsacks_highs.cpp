@@ -41,13 +41,13 @@ KnapsackHighs::objective(const std::vector<double> &solution) const {
 }
 
 template <>
-std::pair<Solution, std::unique_ptr<Node>>
+std::pair<Solution, std::shared_ptr<Node>>
 branch_bound<KnapsackHighs, QueueDepth>(const KnapsackHighs &,
                                                    const Bounds &,
                                                    Solution, std::chrono::seconds);
 
 template <>
-std::pair<Solution, std::unique_ptr<Node>>
+std::pair<Solution, std::shared_ptr<Node>>
 branch_bound<KnapsackHighs, QueueBestBound>(const KnapsackHighs &,
                                                      const Bounds &,
                                                      Solution, std::chrono::seconds);

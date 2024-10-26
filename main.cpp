@@ -243,10 +243,10 @@ int main(int argc, char *argv[]) { /*
   std::cout << "\n gap: " << opt.gap << std::endl;
   std::cout << opt.is_integer() << "\t" << prob.is_feasible(opt) << std::endl;
 
-  //KnapsackHighs check{prob};
-  //auto opt_highs = check.solve_integer(real);
-  //std::cout << "highs value: " << opt_highs.value << "\t"
-  //          << (opt_highs.value == opt.value) << std::endl;
+  KnapsackHighs check{prob};
+  auto opt_highs = check.solve_integer(real);
+  std::cout << "highs value: " << opt_highs.value << "\t"
+            << (opt_highs.value == opt.value) << std::endl;
 
   filename = "problem.txt";
   std::ofstream pr_file(filename);
@@ -256,7 +256,7 @@ int main(int argc, char *argv[]) { /*
   sol_my << opt;
   filename = "solution_hi.txt";
   std::ofstream sol_hi(filename);
-  //sol_hi << opt_highs;
+  sol_hi << opt_highs;
 
   return 0;
 }

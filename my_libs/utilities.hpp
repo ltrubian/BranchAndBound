@@ -70,20 +70,21 @@ struct Node {
   std::size_t b_index;
   double
       b_value; // for the knapsack it is always 0, but it is not so in general
-  std::unique_ptr<Node> childs[2];
-  const Node &parent;
+  std::shared_ptr<Node> childs[2];
+  const std::weak_ptr<Node> parent;
 
-  Node(double value, Node& parent)
-      : value(value), b_index{0}, b_value{0.f}, childs{nullptr},
-        parent(parent) {};
+  Node(double value, std::shared_ptr<Node> parent)
+      : value(value), b_index{0}, b_value{0.f}, childs{nullptr, nullptr}, parent{parent}
+        {};
   ~Node(){};
 
   void initialize_bounds(Bounds &bounds) const {
-    if (&parent == nullptr)
+    auto par{parent.lock()};
+    if (par == nullptr)
       return;
-    auto i{this ==  parent.childs[1].get()};
-    bounds[i][parent.b_index] = parent.b_value + 1. * i;
-    parent.initialize_bounds(bounds);
+    auto i{this ==  par->childs[1].get()};
+    bounds[i][par->b_index] = par->b_value + 1. * i;
+    par->initialize_bounds(bounds);
   };
 
   std::string to_json() const {
@@ -101,14 +102,14 @@ struct Node {
   };
 };
 
+
 struct ExploreNode {
   std::size_t node_id;
   double value;
-  Bounds bounds;
-  Node &node;
+  std::weak_ptr<Node> node;
 
-  ExploreNode(std::size_t id, Bounds &bounds, Node &node)
-      : node_id(id), value(node.value), bounds(bounds), node(node){};
+  ExploreNode(std::size_t id, std::shared_ptr<Node> node)
+      : node_id(id), value(node->value), node(node){};
 };
 
 /**
