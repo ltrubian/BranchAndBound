@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include <chrono>
+#include <limits>
 #include <memory>
 #include <utility>
 
@@ -40,7 +41,7 @@ branch_bound(const T &problem, const Bounds &bounds,
   // Initialize the root of the tree of all the subproblems that this algorithm
   // will consider
   std::unique_ptr<Node> root{nullptr};
-  root.reset(new Node(0., *root));
+  root.reset(new Node(0., root.get()));
 
   prune_or_branch<T, Queue>(problem, st_bounds, opt_sol, root,
                             active_subproblems);
@@ -52,10 +53,10 @@ branch_bound(const T &problem, const Bounds &bounds,
 
     for (auto i{0}; i < 2; ++i) {
       Bounds current_bounds{current_prob.bounds};
-      //current_prob.node.childs[i]->initialize_bounds(current_bounds);
-      //current_bounds[i][current_prob.node.b_index] =
-      //    current_prob.node.b_value + 1. * i;
-      current_prob.node.childs[i].reset(new Node(0., current_prob.node));
+      // current_prob.node.childs[i]->initialize_bounds(current_bounds);
+      // current_bounds[i][current_prob.node.b_index] =
+      //     current_prob.node.b_value + 1. * i;
+      current_prob.node.childs[i].reset(new Node(0., &current_prob.node));
       current_prob.node.childs[i]->initialize_bounds(current_bounds);
       ++opt_sol.nodes;
       // solve the relaxed problem
@@ -69,8 +70,8 @@ branch_bound(const T &problem, const Bounds &bounds,
   }
   // in case the loop is stopped, active_subproblems could contains subproblems
   // to explore
-  opt_sol.success =
-      active_subproblems.empty() && opt_sol.value != start_opt.value;
+  opt_sol.success = active_subproblems.empty() &&
+                    opt_sol.value != -std::numeric_limits<double>::infinity();
 
   return std::make_pair(std::move(opt_sol), std::move(root));
 }
