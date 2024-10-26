@@ -15,7 +15,7 @@ const Solution KnapsackHighs::solve_relaxed(const Bounds &bounds)  {
 
   HighsStatus return_status;
 
-  highs.changeColsBounds(0, bounds.lower.size()-1, bounds.lower.data(),
+  return_status = highs.changeColsBounds(0, bounds.lower.size()-1, bounds.lower.data(),
                          bounds.upper.data());
 
 

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <random>
 #include <stdexcept>
+
 #include <string>
 
 auto select_start_opt(const Knapsack &prob, const Bounds &bounds, int select) {
@@ -78,10 +79,12 @@ auto benchmark(float v, float m) {
           time_res[sopt][solver].emplace_back(d);
           node_res[sopt][solver].emplace_back(opt.nodes);
           int barWidth = 70;
-          double progress{(n_test * 6. + sopt * 2 + solver) / (max_n_test * 6.)};
-		  std::cout << std::setprecision(3);
+          double progress{(n_test * 6. + sopt * 2 + solver) /
+                          (max_n_test * 6.)};
+          std::cout << std::setprecision(3);
           std::cout << "size:\t" << N << "\tn test:\t" << n_test + 1 << "/"
-                    << max_n_test << "\t" << "["                         //
+                    << max_n_test << "\t"
+                    << "["                                       //
                     << std::left << std::setw(barWidth)          //
                     << std::string(barWidth * progress + 2, '=') //
                     << "] "                                      //
@@ -91,13 +94,14 @@ auto benchmark(float v, float m) {
       }
     }
     std::cout << std::endl;
-	
-	std::cout << std::right << std::setprecision(2) 
-			  << std::setw(30) << "time" << std::setw(40) << "nodes" << std::endl;
-	std::cout << std::setw(15) << "depth" << std::setw(15) << "best bound" << "\t"
-			  << std::setw(20) << "depth" << std::setw(20) << "best bound" << std::endl;
+
+    std::cout << std::right << std::setprecision(2) << std::setw(30) << "time"
+              << std::setw(40) << "nodes" << std::endl;
+    std::cout << std::setw(15) << "depth" << std::setw(15) << "best bound"
+              << "\t" << std::setw(20) << "depth" << std::setw(20)
+              << "best bound" << std::endl;
     for (auto sopt{0}; sopt < 3; ++sopt) {
-		for (auto solver{0}; solver < 2; ++solver) {
+      for (auto solver{0}; solver < 2; ++solver) {
         double mean = std::accumulate(time_res[sopt][solver].begin(),
                                       time_res[sopt][solver].end(), 0.) /
                       max_n_test;
@@ -106,23 +110,23 @@ auto benchmark(float v, float m) {
             std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.) /
             max_n_test);
         std::cout << std::setw(15) << std::right << mean << "(" << std_dev
-					<< ")";
-		}
-		for (auto solver{0}; solver < 2; ++solver) {
+                  << ")";
+      }
+      for (auto solver{0}; solver < 2; ++solver) {
         auto mean = std::accumulate(node_res[sopt][solver].begin(),
-                               node_res[sopt][solver].end(), 0.) /
-               max_n_test;
+                                    node_res[sopt][solver].end(), 0.) /
+                    max_n_test;
         auto diff = mean - node_res[sopt][solver];
         auto std_dev = std::sqrt(
             std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.) /
             max_n_test);
-        std::cout << std::setw(20)<< std::right <<mean << "(" << std_dev << ")";
-			}
-			std::cout << std::endl;
-		}
-		
+        std::cout << std::setw(20) << std::right << mean << "(" << std_dev
+                  << ")";
+      }
+      std::cout << std::endl;
     }
   }
+}
 constexpr std::size_t sProblem{0};
 constexpr std::size_t sFirst{1};
 constexpr std::size_t sPrune{2};
@@ -241,7 +245,8 @@ int main(int argc, char *argv[]) { /*
 
   KnapsackHighs check{prob};
   auto opt_highs = check.solve_integer(real);
-  std::cout << "highs value: " << opt_highs.value << "\t" <<(opt_highs.value == opt.value) << std::endl;
+  std::cout << "highs value: " << opt_highs.value << "\t"
+            << (opt_highs.value == opt.value) << std::endl;
 
   filename = "problem.txt";
   std::ofstream pr_file(filename);

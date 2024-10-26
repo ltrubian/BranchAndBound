@@ -39,7 +39,8 @@ branch_bound(const T &problem, const Bounds &bounds,
 
   // Initialize the root of the tree of all the subproblems that this algorithm
   // will consider
-  std::unique_ptr<Node> root{new Node()};
+  std::unique_ptr<Node> root{nullptr};
+  root.reset(new Node(0., *root));
 
   prune_or_branch<T, Queue>(problem, st_bounds, opt_sol, root,
                             active_subproblems);
@@ -51,8 +52,11 @@ branch_bound(const T &problem, const Bounds &bounds,
 
     for (auto i{0}; i < 2; ++i) {
       Bounds current_bounds{current_prob.bounds};
-      current_bounds[i][current_prob.node.b_index] =
-          current_prob.node.b_value + 1. * i;
+      //current_prob.node.childs[i]->initialize_bounds(current_bounds);
+      //current_bounds[i][current_prob.node.b_index] =
+      //    current_prob.node.b_value + 1. * i;
+      current_prob.node.childs[i].reset(new Node(0., current_prob.node));
+      current_prob.node.childs[i]->initialize_bounds(current_bounds);
       ++opt_sol.nodes;
       // solve the relaxed problem
       prune_or_branch<T, Queue>(problem, current_bounds, opt_sol,
@@ -77,7 +81,7 @@ const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
 
   // solve subproblem with specific bounds and associate a new Node
   Solution current_sol{problem.solve_relaxed(bounds)};
-  node.reset(new Node(current_sol.value));
+  node->value = current_sol.value;
 
   // Unfeasible subproblem
   if (!current_sol.success)

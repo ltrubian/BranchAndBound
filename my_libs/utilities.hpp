@@ -3,6 +3,7 @@
 
 #include <bitset>
 #include <cmath>
+#include <cassert>
 #include <iostream>
 #include <limits>
 #include <list>
@@ -11,7 +12,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
 
 struct Solution {
   bool success;
@@ -39,8 +39,8 @@ struct Bounds {
 
   Bounds() : lower{std::vector<double>()}, upper{std::vector<double>()} {};
   Bounds(std::size_t n, double low, double up)
-      : lower{std::vector<double>(n, low)},
-        upper{std::vector<double>(n, up)} {};
+      : lower{std::vector<double>(n, low)}, upper{
+                                                std::vector<double>(n, up)} {};
   explicit Bounds(std::size_t n)
       : Bounds(n, -std::numeric_limits<double>::infinity(),
                std::numeric_limits<double>::infinity()){};
@@ -65,20 +65,26 @@ struct Bounds {
     }
   };
 };
-
-
 struct Node {
   double value;
   std::size_t b_index;
   double
       b_value; // for the knapsack it is always 0, but it is not so in general
   std::unique_ptr<Node> childs[2];
+  const Node &parent;
 
-  Node()
-      : value(-std::numeric_limits<double>::infinity()), b_index{0},
-        b_value{0.f}, childs{nullptr, nullptr} {};
-  Node(double value) : Node() { this->value = value; };
+  Node(double value, Node& parent)
+      : value(value), b_index{0}, b_value{0.f}, childs{nullptr},
+        parent(parent) {};
   ~Node(){};
+
+  void initialize_bounds(Bounds &bounds) const {
+    if (&parent == this)
+      return;
+    auto i{this ==  parent.childs[1].get()};
+    bounds[i][parent.b_index] = parent.b_value + 1. * i;
+    parent.initialize_bounds(bounds);
+  };
 
   std::string to_json() const {
     std::string js = "{";

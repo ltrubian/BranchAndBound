@@ -52,7 +52,7 @@ const Solution Knapsack::solve_relaxed(const Bounds &bounds) const {
   if (correct_capacity < 0)
     return opt_sol;
   std::vector<double> real_prices{bounds.upper * (1.0 - bounds.lower)};
-  long int items_takable{std::count_if(std::begin(real_prices),
+  auto items_takable{std::count_if(std::begin(real_prices),
                                        std::end(real_prices),
                                        [](double p) { return 0. != p; })};
   // if there are no other items to take but the ones I must => the solution is
@@ -105,7 +105,7 @@ Knapsack::solve_integer_guess(const Bounds &bounds) const {
   if (correct_capacity < 0)
     return opt_sol;
   std::vector<double> real_prices{bounds.upper * (1.0 - bounds.lower)};
-  long int items_takable{std::count_if(std::begin(real_prices),
+  auto items_takable{std::count_if(std::begin(real_prices),
                                        std::end(real_prices),
                                        [](double p) { return 0. != p; })};
   // if there are no other items to take but the ones I must => the solution is
