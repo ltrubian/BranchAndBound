@@ -1,15 +1,18 @@
 
+#include "argparse.hpp"
 #include "branch_and_bound.hpp"
 #include "knapsacks.hpp"
 #include "utilities.hpp"
 #include <chrono>
 #include <cmath>
+#include <cstddef>
 #include <fstream>
 #include <iomanip>
 #include <ios>
 #include <iostream>
 #include <random>
 #include <string>
+#include <thread>
 
 Solution select_start_opt(const Knapsack &prob, const Bounds &bounds,
                           int select);
@@ -21,28 +24,95 @@ select_solver_variant(const Knapsack &prob, const Bounds &bounds,
 void print_statistics(std::vector<double> time[3][2],
                       std::vector<double> node[3][2]);
 
-void print_progress(int N,
-    int n_test, int max_n_test, int sopt, int solver,
+void print_progress(
+    int N, int n_test, int max_n_test, int sopt, int solver,
     std::chrono::time_point<std::chrono::high_resolution_clock> &partial,
     std::chrono::time_point<std::chrono::high_resolution_clock> &total);
 
-void benchmark(float v, float m);
+void benchmark(std::size_t v, float m, std::size_t max_n_test,
+               std::vector<std::size_t> &sizes, std::string filename,
+               std::size_t seed, bool progress, bool statistics);
 
-int main() {
-  std::cout << "start benchmark" << std::endl;
-  benchmark(5, 20.f);
+int main(int argc, char *argv[]) {
+  argparse::ArgumentParser program("benchmark");
+  program.set_usage_max_line_width(80);
+  program.set_usage_break_on_mutex();
+  auto &random_group = program.add_mutually_exclusive_group();
+
+  random_group.add_argument("-s", "--seed")
+      .help("seed used for generating the sequence of problems")
+      .scan<'u', std::size_t>()
+      .default_value<std::size_t>(100);
+  random_group.add_argument("--random")
+      .help("choose a random initial seed for the sequence of problems")
+      .flag();
+  program.add_argument("-v")
+      .help("number of sample used for generating the whole problem")
+      .scan<'u', std::size_t>()
+      .default_value<std::size_t>(5);
+  program.add_argument("-m")
+      .help("normalizer used for generating the whole problem")
+      .scan<'g', double>()
+      .default_value<double>(20.);
+  program.add_argument("--samples")
+      .help("number of samples for each problem dimension")
+      .scan<'u', std::size_t>()
+      .default_value<std::size_t>(10);
+  program.add_argument("--sizes")
+      .help(
+          "start, end, step: size N of the problems will be in [start, end). ")
+      .nargs(1, 3)
+      .default_value(std::vector<std::size_t>{40, 100, 10})
+      .scan<'u', std::size_t>();
+  program.add_argument("-o", "--output-file")
+      .help("specify the file output, only for raw data")
+      .default_value("bench.csv");
+
+  try {
+    program.parse_args(argc, argv);
+  } catch (const std::exception &err) {
+    std::cerr << err.what() << std::endl;
+    std::cerr << program;
+    return 1;
+  }
+  std::size_t v = program.get<std::size_t>("-v");
+  double m = program.get<double>("-m");
+  std::size_t samples = program.get<std::size_t>("--samples");
+  auto sizes = program.get<std::vector<std::size_t>>("--sizes");
+  auto filename = program.get<std::string>("-o");
+  auto seed = program.get<std::size_t>("-s");
+
+  if (program["--random"] == true) {
+    std::random_device rd;
+    seed = rd();
+  }
+
+  if (!program.is_used("-o")) {
+    std::cout
+        << "default name for output file lead to overwrite, stop if undesired"
+        << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::cout << "... fine!" << std::endl;
+  }
+
+  if (sizes.size() != 3)
+    sizes.emplace_back(10);
+  if (sizes.size() != 3)
+    sizes.insert(--sizes.end(), 100);
+
+  std::cout << "start benchmark, starting seed: " << seed << std::endl;
+  benchmark(v, m, samples, sizes, filename, seed, true, true);
   std::cout << "end benchmark" << std::endl;
 }
 
-void benchmark(float v, float m) {
-  std::random_device rd;
-  //std::mt19937_64 gen(seed);
+void benchmark(std::size_t v, float m, std::size_t max_n_test,
+               std::vector<std::size_t> &sizes, std::string filename,
+               std::size_t seed, bool progress, bool statistics) {
+  std::mt19937_64 rd(seed);
   std::uniform_int_distribution<std::size_t> di(0);
-  std::string filename{"bench-" + std::to_string(di(rd)) + ".csv"};
   std::ofstream result(filename);
-  auto max_n_test{100};
   auto total = std::chrono::high_resolution_clock::now();
-  for (auto N{40}; N < 201; N += 10) {
+  for (auto N{sizes[0]}; N < sizes[1]; N += sizes[2]) {
     std::vector<double> time_res[3][2];
     std::vector<double> node_res[3][2];
     auto partial = std::chrono::high_resolution_clock::now();
@@ -66,45 +136,6 @@ void benchmark(float v, float m) {
       }
     }
     print_statistics(time_res, node_res);
-  }
-}
-
-void print_statistics(std::vector<double> time[3][2],
-                      std::vector<double> node[3][2]) {
-  auto max_n_test{time[0][0].size()};
-      std::cout << std::endl;
-  std::cout << std::left << std::setprecision(4) << std::setw(40) << "time"
-            << std::setw(40) << "nodes" << std::endl;
-  std::cout << std::setw(20) << "depth" << std::setw(20) << "best bound" << "\t"
-            << std::setw(20) << "depth" << std::setw(20) << "best bound"
-            << std::endl;
-  for (auto sopt{0}; sopt < 3; ++sopt) {
-    for (auto solver{0}; solver < 2; ++solver) {
-      double mean = std::accumulate(time[sopt][solver].begin(),
-                                    time[sopt][solver].end(), 0.) /
-                    max_n_test;
-      auto diff = mean - time[sopt][solver];
-      double std_dev = std::sqrt(
-          std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.) /
-          max_n_test);
-      std::cout << std::setw(6) << std::left << mean << "(" << std::internal
-                << std::setw(6) << std_dev << ")\t";
-    }
-
-    for (auto solver{0}; solver < 2; ++solver) {
-
-      auto mean = std::accumulate(node[sopt][solver].begin(),
-                                  node[sopt][solver].end(), 0.) /
-                  max_n_test;
-      auto diff = mean - node[sopt][solver];
-      auto std_dev = std::sqrt(
-          std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.) /
-          max_n_test);
-      std::cout << "\t";
-      std::cout << std::setw(8) << std::left << mean << "(" << std::internal
-                << std::setw(6) << std_dev << ")";
-    }
-    std::cout << "\n";
   }
 }
 
@@ -142,9 +173,47 @@ select_solver_variant(const Knapsack &prob, const Bounds &bounds,
     throw std::out_of_range("0-1 are valid, no other variants are allowed");
   }
 }
+void print_statistics(std::vector<double> time[3][2],
+                      std::vector<double> node[3][2]) {
+  auto max_n_test{time[0][0].size()};
+  std::cout << std::endl;
+  std::cout << std::left << std::setprecision(4) << std::setw(40) << "time"
+            << std::setw(40) << "nodes" << std::endl;
+  std::cout << std::setw(20) << "depth" << std::setw(20) << "best bound" << "\t"
+            << std::setw(20) << "depth" << std::setw(20) << "best bound"
+            << std::endl;
+  for (auto sopt{0}; sopt < 3; ++sopt) {
+    for (auto solver{0}; solver < 2; ++solver) {
+      double mean = std::accumulate(time[sopt][solver].begin(),
+                                    time[sopt][solver].end(), 0.) /
+                    max_n_test;
+      auto diff = mean - time[sopt][solver];
+      double std_dev = std::sqrt(
+          std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.) /
+          max_n_test);
+      std::cout << std::setw(6) << std::left << mean << "(" << std::internal
+                << std::setw(6) << std_dev << ")\t";
+    }
 
-void print_progress(int N,
-    int n_test, int max_n_test, int sopt, int solver,
+    for (auto solver{0}; solver < 2; ++solver) {
+
+      auto mean = std::accumulate(node[sopt][solver].begin(),
+                                  node[sopt][solver].end(), 0.) /
+                  max_n_test;
+      auto diff = mean - node[sopt][solver];
+      auto std_dev = std::sqrt(
+          std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.) /
+          max_n_test);
+      std::cout << "\t";
+      std::cout << std::setw(8) << std::left << mean << "(" << std::internal
+                << std::setw(6) << std_dev << ")";
+    }
+    std::cout << "\n";
+  }
+}
+
+void print_progress(
+    int N, int n_test, int max_n_test, int sopt, int solver,
     std::chrono::time_point<std::chrono::high_resolution_clock> &partial,
     std::chrono::time_point<std::chrono::high_resolution_clock> &total) {
   int barWidth = 30;
