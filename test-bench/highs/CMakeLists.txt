@@ -1,7 +1,21 @@
 
-add_executable(test-highs test.cpp test_main.cpp)
-target_link_libraries(test-highs  knapsack_lib knapsack_highs_lib)
-target_include_directories(test-highs
+
+add_library(test_main test_main.cpp)
+
+target_include_directories(test_main
+                            PUBLIC  "${PROJECT_SOURCE_DIR}/test-bench")
+
+
+add_executable(test-relax test_relaxed.cpp )
+target_link_libraries(test-relax  knapsack_lib knapsack_highs_lib test_main)
+target_include_directories(test-relax
                             PUBLIC "${PROJECT_SOURCE_DIR}/my_libs"
                             PUBLIC  "${PROJECT_SOURCE_DIR}/test-bench")
 
+
+
+add_executable(test-integer test_integer.cpp )
+target_link_libraries(test-integer  knapsack_lib knapsack_highs_lib test_main)
+target_include_directories(test-integer
+                            PUBLIC "${PROJECT_SOURCE_DIR}/my_libs"
+                            PUBLIC  "${PROJECT_SOURCE_DIR}/test-bench")

@@ -23,8 +23,10 @@ find_package(Threads REQUIRED)
 target_link_libraries(knapsack_highs_lib  highs::highs)
 
 enable_testing()
-add_test(NAME test-highs
-        COMMAND $<TARGET_FILE:test-highs>)
+add_test(NAME test-relax
+        COMMAND $<TARGET_FILE:test-relax>)
+add_test(NAME test-integer
+        COMMAND $<TARGET_FILE:test-integer>)
 		
 file(GLOB_RECURSE ALL_SOURCE_FILES
     *.c *.h *.cpp *.hpp *.cxx *.hxx *.cc *.hh *.cppm *.ipp *.ixx)
