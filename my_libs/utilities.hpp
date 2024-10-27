@@ -1,9 +1,8 @@
 #ifndef __UTILITIES__LT
 #define __UTILITIES__LT
 
-#include <bitset>
-#include <cmath>
 #include <cassert>
+#include <cmath>
 #include <iostream>
 #include <limits>
 #include <list>
@@ -39,8 +38,8 @@ struct Bounds {
 
   Bounds() : lower{std::vector<double>()}, upper{std::vector<double>()} {};
   Bounds(std::size_t n, double low, double up)
-      : lower{std::vector<double>(n, low)}, upper{
-                                                std::vector<double>(n, up)} {};
+      : lower{std::vector<double>(n, low)},
+        upper{std::vector<double>(n, up)} {};
   explicit Bounds(std::size_t n)
       : Bounds(n, -std::numeric_limits<double>::infinity(),
                std::numeric_limits<double>::infinity()){};
@@ -68,24 +67,34 @@ struct Bounds {
 struct Node {
   double value;
   std::size_t b_index;
-  double
-      b_value; // for the knapsack it is always 0, but it is not so in general
+  double b_value;
   std::unique_ptr<Node> childs[2];
   const Node *parent;
 
-  explicit Node(double value) : value(value), b_index{0}, b_value{0.f}, childs{nullptr},
-        parent(nullptr) {};
+  Node() = default;
+  explicit Node(double value)
+      : value(value), b_index{0}, b_value{0.}, childs{nullptr},
+        parent(nullptr){};
 
-  Node(double value, Node* parent) : Node(value) {this->parent = parent;};
+  Node(double value, Node *parent) : Node(value) { this->parent = parent; };
   ~Node(){};
 
   void initialize_bounds(Bounds &bounds) const {
     if (parent == nullptr)
       return;
-    auto i{this ==  parent->childs[1].get()};
+    auto i{this == parent->childs[1].get()};
     bounds[i][parent->b_index] = parent->b_value + 1. * i;
     parent->initialize_bounds(bounds);
   };
+
+  int count_node() const {
+    int n{1};
+    if (childs[0])
+      n += childs[0]->count_node();
+    if (childs[1])
+      n += childs[1]->count_node();
+    return n;
+  }
 
   std::string to_json() const {
     std::string js = "{";
@@ -103,13 +112,10 @@ struct Node {
 };
 
 struct ExploreNode {
-  std::size_t node_id;
   double value;
-  //Bounds bounds;
   Node &node;
 
-  ExploreNode(std::size_t id, Node &node)
-      : node_id(id), value(node.value), node(node){};
+  ExploreNode(Node &node) : value(node.value), node(node){};
 };
 
 /**
@@ -120,14 +126,14 @@ struct ExploreNode {
  */
 struct BestBoundFirst {
   inline bool operator()(const ExploreNode &a, const ExploreNode &b) const {
-    return (a.value < b.value) || (a.value == b.value && a.node_id < b.node_id);
+    return (a.value < b.value);
   }
 };
 /**
  * thin wrapper over the set container
  */
 struct QueueBestBound {
-  std::set<ExploreNode, BestBoundFirst> queue;
+  std::multiset<ExploreNode, BestBoundFirst> queue;
 
   void prune(const double &value) {
     auto ex_node{queue.begin()};

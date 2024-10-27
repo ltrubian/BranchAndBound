@@ -1,8 +1,6 @@
 #include "utilities.hpp"
 #include <cmath>
 
-// typedef double double;
-
 bool Solution::is_integer() const {
   double integral{0.f}, fractional{0.f};
   for (auto &x : this->solution) {

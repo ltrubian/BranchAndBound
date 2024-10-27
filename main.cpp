@@ -29,7 +29,7 @@ auto select_start_opt(const Knapsack &prob, const Bounds &bounds, int select) {
 
 auto select_solver_variant(const Knapsack &prob, const Bounds &bounds,
                            const Solution start_opt, int select) {
-  //Solution opt; Node root(0.);
+  // Solution opt; Node root(0.);
   auto time_it = [&](auto F) {
     auto t0 = std::chrono::high_resolution_clock::now();
     auto [opt, root] = F(prob, bounds, start_opt, std::chrono::seconds(300));
@@ -85,8 +85,7 @@ auto benchmark(float v, float m) {
                           (max_n_test * 6.)};
           std::cout << std::setprecision(3);
           std::cout << "size:\t" << N << "\tn test:\t" << n_test + 1 << "/"
-                    << max_n_test << "\t"
-                    << "["                                       //
+                    << max_n_test << "\t" << "["                 //
                     << std::left << std::setw(barWidth)          //
                     << std::string(barWidth * progress + 2, '=') //
                     << "] "                                      //
@@ -218,7 +217,7 @@ int main(int argc, char *argv[]) { /*
                                  istrm >> tmp;
                                  std::cout << tmp;*/
   std::cout << "start benchmark" << std::endl;
-  //benchmark(5, 20.f);
+  // benchmark(5, 20.f);
   std::cout << "end benchmark" << std::endl;
 
   std::random_device rd;
@@ -235,21 +234,23 @@ int main(int argc, char *argv[]) { /*
   // secodi
   auto [prob, start_opt, select, seed] = parser(argc, argv);
   Bounds real(prob.prices.size(), 0.f, 1.f);
-  //start_opt.value = 1274201;
+  // start_opt.value = 1274201;
   auto [opt, root, d] = select_solver_variant(prob, real, start_opt, select);
   std::cout << "seed:\t" << seed << std::endl;
-  std::cout << prob.prices.size() << "\t" << opt.success << "\t" << std::setprecision(20) << opt.nodes
-            << "\t" << opt.value << std::endl;
+  std::cout << prob.prices.size() << "\t" << opt.success << "\t"
+            << std::setprecision(20) << opt.nodes << "\t" << opt.value
+            << std::endl;
   std::string filename{"test.json"};
   std::ofstream istrm(filename);
   istrm << root->to_json() << "\n";
   std::cout << "\n gap: " << opt.gap << std::endl;
   std::cout << opt.is_integer() << "\t" << prob.is_feasible(opt) << std::endl;
 
-  KnapsackHighs check{prob};
-  auto opt_highs = check.solve_integer(real);
-  std::cout << "highs value: " << opt_highs.value << "\t"
-            << (opt_highs.value == opt.value) << std::endl;
+  std::cout << "nodes in the tree: " << root->count_node() << std::endl;
+  // KnapsackHighs check{prob};
+  // auto opt_highs = check.solve_integer(real);
+  // std::cout << "highs value: " << opt_highs.value << "\t"
+  //           << (opt_highs.value == opt.value) << std::endl;
 
   filename = "problem.txt";
   std::ofstream pr_file(filename);
@@ -259,7 +260,7 @@ int main(int argc, char *argv[]) { /*
   sol_my << opt;
   filename = "solution_hi.txt";
   std::ofstream sol_hi(filename);
-  //sol_hi << opt_highs;
+  // sol_hi << opt_highs;
 
   return 0;
 }

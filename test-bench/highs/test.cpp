@@ -30,7 +30,7 @@ Bounds random_bounds(std::size_t n, std::size_t seed) {
 };
 
 template <typename T>
-std::pair<Solution, std::unique_ptr<Node>> select_solver_variant(const T &prob, Bounds &bounds,
+auto select_solver_variant(const T &prob, Bounds &bounds,
                                       int select, Solution opt = Solution()) {
   switch (select) {
   case 0:
