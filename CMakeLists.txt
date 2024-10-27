@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 project(Branch_and_Bound)
-set(CMAKE_CXX_FLAGS "-O3 -std=c++17 ")# -ggdb3")#-fsanitize=address") #-pg
+set(CMAKE_CXX_FLAGS_DEBUG_INIT "-ggdb3")
+set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
+set(CMAKE_CXX_FLAGS "-std=c++17 ")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-#set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 set(CMAKE_EXECUTABLE_SUFFIX ".x")
 
 add_subdirectory(my_libs)
@@ -14,6 +15,7 @@ target_link_libraries(main PUBLIC knapsack_lib)
 target_link_libraries(main PUBLIC knapsack_highs_lib)
 target_include_directories(main PUBLIC
 		"${PROJECT_SOURCE_DIR}/my_libs")
+
 
 
 #set(HIGHS_DIR /usr/local/lib/cmake/highs)
@@ -34,9 +36,4 @@ add_custom_target(format
     COMMAND clang-format
     -i
     ${ALL_SOURCE_FILES}
-)
-add_custom_target(cmake-refresh
-    COMMAND rm  CMakeCache.txt
-    COMMAND rm  compile_commands.json
-    COMMAND cmake .
 )

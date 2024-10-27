@@ -12,7 +12,6 @@
 #include <iostream>
 #include <random>
 #include <stdexcept>
-
 #include <string>
 
 auto select_start_opt(const Knapsack &prob, const Bounds &bounds, int select) {
@@ -48,98 +47,7 @@ auto select_solver_variant(const Knapsack &prob, const Bounds &bounds,
     throw std::out_of_range("0-1 are valid, no other variants are allowed");
   }
 }
-auto benchmark(float v, float m) {
-  std::random_device rd;
-  std::uniform_int_distribution<std::size_t> di(0);
-  std::string filename{"bench-" + std::to_string(di(rd)) + ".csv"};
-  std::ofstream result(filename);
-  auto max_n_test{100};
-  auto total = std::chrono::high_resolution_clock::now();
-  for (auto N{40}; N < 201; N += 10) {
-    std::vector<double> time_res[3][2];
-    std::vector<double> node_res[3][2];
-    auto n_time = std::chrono::high_resolution_clock::now();
-    for (auto n_test(0); n_test < max_n_test; ++n_test) {
-      const auto seed{di(rd)};
-      const auto problem{Knapsack(v, m, N, seed)};
-      const auto bounds{Bounds(N, 0.f, 1.f)};
-      auto tester{KnapsackHighs(problem)};
-      auto t0 = std::chrono::high_resolution_clock::now();
-      const auto real_opt{tester.solve_integer(bounds)};
-      auto t1 = std::chrono::high_resolution_clock::now();
-      auto d_t = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0)
-                     .count();
 
-      for (auto sopt{0}; sopt < 3; ++sopt) {
-        const auto start_opt{select_start_opt(problem, bounds, sopt)};
-        for (auto solver{0}; solver < 2; ++solver) {
-          auto [opt, root, d] =
-              select_solver_variant(problem, bounds, start_opt, solver);
-          result << N << "," << n_test << "," << seed << ","  // test id
-                 << sopt << "," << solver << ","              // solver id
-                 << opt.nodes << "," << d << ","              // bench result
-                 << opt.value << "," << real_opt.value << "," // compare opt_sol
-                 << std::to_string(real_opt.value == opt.value) << "," //
-                 << d_t << std::endl;
-          time_res[sopt][solver].emplace_back(d);
-          node_res[sopt][solver].emplace_back(opt.nodes);
-          int barWidth = 30;
-          double progress{(n_test * 6. + sopt * 2 + solver) /
-                          (max_n_test * 6.)};
-          auto c_time = std::chrono::high_resolution_clock::now();
-          auto d_total = std::chrono::duration_cast<std::chrono::milliseconds>(c_time - total)
-                     .count() / 1000.;
-          auto d_n = std::chrono::duration_cast<std::chrono::milliseconds>(c_time - n_time)
-                     .count() / 1000.;
-          std::cout << "size:\t" << N << "\tn test:\t" << n_test + 1 << "/"
-                    << max_n_test << "\t" << "["                 //
-                    << std::left << std::setw(barWidth)          //
-                    << std::string(barWidth * progress + 2, '=') //
-                    << "] "                                      //
-                    << std::ceil(progress * 100) << " %"
-                    << "\t " << d_n << "s\t " << d_total << "s"
-                    << "\r";
-          std::cout.flush();
-        }
-      }
-    }
-    std::cout << std::endl;
-
-    std::cout << std::left << std::setprecision(4) << std::setw(40) << "time"
-              << std::setw(40) << "nodes" << std::endl;
-    std::cout << std::setw(20) << "depth" << std::setw(20) << "best bound"
-              << "\t" << std::setw(20) << "depth" << std::setw(20)
-              << "best bound" << std::endl;
-    for (auto sopt{0}; sopt < 3; ++sopt) {
-      for (auto solver{0}; solver < 2; ++solver) {
-        double mean = std::accumulate(time_res[sopt][solver].begin(),
-                                      time_res[sopt][solver].end(), 0.) /
-                      max_n_test;
-        auto diff = mean - time_res[sopt][solver];
-        double std_dev = std::sqrt(
-            std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.) /
-            max_n_test);
-        std::cout << std::setw(6) << std::left << mean << "(" << std::internal
-                  << std::setw(6) << std_dev << ")\t";
-      }
-
-      for (auto solver{0}; solver < 2; ++solver) {
-
-        auto mean = std::accumulate(node_res[sopt][solver].begin(),
-                                    node_res[sopt][solver].end(), 0.) /
-                    max_n_test;
-        auto diff = mean - node_res[sopt][solver];
-        auto std_dev = std::sqrt(
-            std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.) /
-            max_n_test);
-        std::cout << "\t";
-        std::cout << std::setw(8) << std::left << mean << "(" << std::internal
-                  << std::setw(6) << std_dev << ")";
-      }
-      std::cout << "\n";
-    }
-  }
-}
 constexpr std::size_t sProblem{0};
 constexpr std::size_t sFirst{1};
 constexpr std::size_t sPrune{2};
@@ -228,9 +136,7 @@ int main(int argc, char *argv[]) { /*
                                  OptimalSolution tmp;
                                  istrm >> tmp;
                                  std::cout << tmp;*/
-  std::cout << "start benchmark" << std::endl;
-  benchmark(5, 20.f);
-  std::cout << "end benchmark" << std::endl;
+
 
   std::random_device rd;
   std::uniform_int_distribution<std::size_t> di(0);
