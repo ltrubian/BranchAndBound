@@ -73,9 +73,10 @@ struct Node {
   std::unique_ptr<Node> childs[2];
   const Node *parent;
 
-  Node(double value, Node* parent)
-      : value(value), b_index{0}, b_value{0.f}, childs{nullptr},
-        parent(parent) {};
+  explicit Node(double value) : value(value), b_index{0}, b_value{0.f}, childs{nullptr},
+        parent(nullptr) {};
+
+  Node(double value, Node* parent) : Node(value) {this->parent = parent;};
   ~Node(){};
 
   void initialize_bounds(Bounds &bounds) const {
@@ -104,11 +105,11 @@ struct Node {
 struct ExploreNode {
   std::size_t node_id;
   double value;
-  Bounds bounds;
+  //Bounds bounds;
   Node &node;
 
-  ExploreNode(std::size_t id, Bounds &bounds, Node &node)
-      : node_id(id), value(node.value), bounds(bounds), node(node){};
+  ExploreNode(std::size_t id, Node &node)
+      : node_id(id), value(node.value), node(node){};
 };
 
 /**

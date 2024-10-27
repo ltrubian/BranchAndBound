@@ -10,14 +10,13 @@
 #include <utility>
 #include <vector>
 
-const Solution KnapsackHighs::solve_relaxed(const Bounds &bounds)  {
+const Solution KnapsackHighs::solve_relaxed(const Bounds &bounds) {
   Solution opt_sol{};
 
   HighsStatus return_status;
 
-  return_status = highs.changeColsBounds(0, bounds.lower.size()-1, bounds.lower.data(),
-                         bounds.upper.data());
-
+  return_status = highs.changeColsBounds(
+      0, bounds.lower.size() - 1, bounds.lower.data(), bounds.upper.data());
 
   assert(return_status == HighsStatus::kOk);
 
@@ -37,17 +36,17 @@ const Solution KnapsackHighs::solve_relaxed(const Bounds &bounds)  {
 
 const double
 KnapsackHighs::objective(const std::vector<double> &solution) const {
-  return std::inner_product(solution.begin(), solution.end(), problem.lp_.col_cost_.begin(), 0.);
+  return std::inner_product(solution.begin(), solution.end(),
+                            problem.lp_.col_cost_.begin(), 0.);
 }
 
 template <>
 std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<KnapsackHighs, QueueDepth>(const KnapsackHighs &,
-                                                   const Bounds &,
-                                                   Solution, std::chrono::seconds);
+branch_bound<KnapsackHighs, QueueDepth>(const KnapsackHighs &, const Bounds &,
+                                        Solution, std::chrono::seconds);
 
 template <>
 std::pair<Solution, std::unique_ptr<Node>>
 branch_bound<KnapsackHighs, QueueBestBound>(const KnapsackHighs &,
-                                                     const Bounds &,
-                                                     Solution, std::chrono::seconds);
+                                            const Bounds &, Solution,
+                                            std::chrono::seconds);

@@ -26,15 +26,17 @@ auto select_start_opt(const Knapsack &prob, const Bounds &bounds, int select) {
     throw std::out_of_range("0-2: no other starting solution available");
   }
 }
+
 auto select_solver_variant(const Knapsack &prob, const Bounds &bounds,
                            const Solution start_opt, int select) {
+  //Solution opt; Node root(0.);
   auto time_it = [&](auto F) {
     auto t0 = std::chrono::high_resolution_clock::now();
     auto [opt, root] = F(prob, bounds, start_opt, std::chrono::seconds(300));
     auto t1 = std::chrono::high_resolution_clock::now();
     auto d =
         std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-    return std::make_tuple(opt, std::move(root), d);
+    return std::make_tuple(std::move(opt), std::move(root), std::move(d));
   };
   switch (select) {
   case 0:
@@ -141,7 +143,7 @@ auto parser(int argc, char *argv[]) {
   std::bitset<6> settings;
   std::string flags{"-s-n-f-optnone"};
   std::size_t seed{di(rd)}, n{50}, first{1};
-  seed = 12696456601695067945;
+  seed = 12696456601695067945u;
   Solution opt{};
   Knapsack problem(0);
   std::string first_arg;
@@ -233,9 +235,10 @@ int main(int argc, char *argv[]) { /*
   // secodi
   auto [prob, start_opt, select, seed] = parser(argc, argv);
   Bounds real(prob.prices.size(), 0.f, 1.f);
+  //start_opt.value = 1274201;
   auto [opt, root, d] = select_solver_variant(prob, real, start_opt, select);
   std::cout << "seed:\t" << seed << std::endl;
-  std::cout << prob.prices.size() << "\t" << opt.success << "\t" << opt.nodes
+  std::cout << prob.prices.size() << "\t" << opt.success << "\t" << std::setprecision(20) << opt.nodes
             << "\t" << opt.value << std::endl;
   std::string filename{"test.json"};
   std::ofstream istrm(filename);
@@ -243,10 +246,10 @@ int main(int argc, char *argv[]) { /*
   std::cout << "\n gap: " << opt.gap << std::endl;
   std::cout << opt.is_integer() << "\t" << prob.is_feasible(opt) << std::endl;
 
-  //KnapsackHighs check{prob};
-  //auto opt_highs = check.solve_integer(real);
-  //std::cout << "highs value: " << opt_highs.value << "\t"
-  //          << (opt_highs.value == opt.value) << std::endl;
+  KnapsackHighs check{prob};
+  auto opt_highs = check.solve_integer(real);
+  std::cout << "highs value: " << opt_highs.value << "\t"
+            << (opt_highs.value == opt.value) << std::endl;
 
   filename = "problem.txt";
   std::ofstream pr_file(filename);

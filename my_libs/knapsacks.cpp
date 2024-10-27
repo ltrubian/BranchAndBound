@@ -6,13 +6,14 @@
 #include <cmath>
 #include <cstddef>
 #include <iterator>
+#include <memory>
 #include <numeric>
 #include <random>
 #include <string>
 #include <utility>
 #include <vector>
 
-Knapsack::Knapsack(std::size_t v,double m, std::size_t n, std::size_t seed)
+Knapsack::Knapsack(std::size_t v, double m, std::size_t n, std::size_t seed)
     : Knapsack{n} {
   // pairs generation
   std::mt19937_64 gen(seed);
@@ -22,7 +23,7 @@ Knapsack::Knapsack(std::size_t v,double m, std::size_t n, std::size_t seed)
                 [&]() { return dis_w(gen); });
   for (auto i{0ul}; i < v; ++i) {
     std::uniform_real_distribution<double> dis_p(small_w[i] + 95.,
-                                                small_w[i] + 105.);
+                                                 small_w[i] + 105.);
     small_p[i] = dis_p(gen);
   }
   // pair normalization
@@ -45,16 +46,16 @@ Knapsack::Knapsack(std::size_t v,double m, std::size_t n, std::size_t seed)
 const Solution Knapsack::solve_relaxed(const Bounds &bounds) const {
   Solution opt_sol{};
   double correct_capacity{this->capacity -
-                         std::inner_product(std::begin(bounds.lower),
-                                            std::end(bounds.lower),
-                                            std::begin(this->weights), 0.0)};
+                          std::inner_product(std::begin(bounds.lower),
+                                             std::end(bounds.lower),
+                                             std::begin(this->weights), 0.0)};
   // if the items the bounds make me take are too much => infeasible bounds
   if (correct_capacity < 0)
     return opt_sol;
   std::vector<double> real_prices{bounds.upper * (1.0 - bounds.lower)};
   auto items_takable{std::count_if(std::begin(real_prices),
-                                       std::end(real_prices),
-                                       [](double p) { return 0. != p; })};
+                                   std::end(real_prices),
+                                   [](double p) { return 0. != p; })};
   // if there are no other items to take but the ones I must => the solution is
   // the item I must take
   opt_sol.solution =
@@ -85,8 +86,7 @@ const Solution Knapsack::solve_relaxed(const Bounds &bounds) const {
 
   return opt_sol;
 }
-const Solution
-Knapsack::solve_integer_naive(const Bounds &bounds) const {
+const Solution Knapsack::solve_integer_naive(const Bounds &bounds) const {
   Solution opt{this->solve_relaxed(bounds)};
   std::for_each(opt.solution.begin(), opt.solution.end(),
                 [](double &x) { x = std::floor(x); });
@@ -94,20 +94,19 @@ Knapsack::solve_integer_naive(const Bounds &bounds) const {
   return opt;
 };
 
-const Solution
-Knapsack::solve_integer_guess(const Bounds &bounds) const {
+const Solution Knapsack::solve_integer_guess(const Bounds &bounds) const {
   Solution opt_sol{};
   double correct_capacity{this->capacity -
-                         std::inner_product(std::begin(bounds.lower),
-                                            std::end(bounds.lower),
-                                            std::begin(this->weights), 0.0)};
+                          std::inner_product(std::begin(bounds.lower),
+                                             std::end(bounds.lower),
+                                             std::begin(this->weights), 0.0)};
   // if the items the bounds make me take are too much => infeasible bounds
   if (correct_capacity < 0)
     return opt_sol;
   std::vector<double> real_prices{bounds.upper * (1.0 - bounds.lower)};
   auto items_takable{std::count_if(std::begin(real_prices),
-                                       std::end(real_prices),
-                                       [](double p) { return 0. != p; })};
+                                   std::end(real_prices),
+                                   [](double p) { return 0. != p; })};
   // if there are no other items to take but the ones I must => the solution is
   // the item I must take
   opt_sol.solution =
@@ -139,11 +138,13 @@ Knapsack::solve_integer_guess(const Bounds &bounds) const {
   return opt_sol;
 }
 const double Knapsack::objective(const std::vector<double> &solution) const {
-  return std::inner_product(solution.begin(), solution.end(), prices.begin(), 0.);
+  return std::inner_product(solution.begin(), solution.end(), prices.begin(),
+                            0.);
 }
 
-const bool Knapsack::is_feasible(const Solution& opt) const {
-  return std::inner_product(weights.begin(), weights.end(), opt.solution.begin(), 0.) <= this->capacity;
+const bool Knapsack::is_feasible(const Solution &opt) const {
+  return std::inner_product(weights.begin(), weights.end(),
+                            opt.solution.begin(), 0.) <= this->capacity;
 };
 
 std::ostream &operator<<(std::ostream &os, Knapsack &item) {
@@ -167,11 +168,10 @@ std::istream &operator>>(std::istream &is, Knapsack &item) {
 
 template <>
 std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<Knapsack, QueueDepth>(const Knapsack &, const Bounds &,
-                                              Solution, std::chrono::seconds);
+branch_bound<Knapsack, QueueDepth>(const Knapsack &, const Bounds &, Solution,
+                                   std::chrono::seconds);
 
 template <>
 std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<Knapsack, QueueBestBound>(const Knapsack &,
-                                                const Bounds &,
-                                                Solution, std::chrono::seconds);
+branch_bound<Knapsack, QueueBestBound>(const Knapsack &, const Bounds &,
+                                       Solution, std::chrono::seconds);
