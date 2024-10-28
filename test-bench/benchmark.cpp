@@ -129,8 +129,12 @@ int main(int argc, char *argv[]) {
     std::clog
         << "default name for output file lead to overwrite, stop if undesired"
         << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    std::clog << "... fine!" << std::endl;
+    for (auto x{0}; x < 5; ++x) {
+      std::clog << "\t" << std::left << std::setw(5) << std::string(x + 1, '.')
+                << "  " << (5 - x - 1) << "s\r" << std::flush;
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+    std::clog << std::left << std::setw(20)<<"that's  fine!" << std::endl;
   }
 
   if (sizes.size() != 3)
