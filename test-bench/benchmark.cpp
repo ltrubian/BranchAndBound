@@ -35,38 +35,64 @@ void benchmark(std::size_t v, float m, std::size_t max_n_test,
 
 int main(int argc, char *argv[]) {
   argparse::ArgumentParser program("benchmark");
-  program.set_usage_max_line_width(80);
+  program.set_usage_max_line_width(60);
   program.set_usage_break_on_mutex();
+  program.set_assign_chars(" =");
+  program.add_description(
+      "Run a benchmark of branch and bound algorithm:\n"
+      "for 'sizes' in [start, end) with step, it will run a number of "
+      "'samples' "
+      "with all the algorithms that I was testing in all the conditions: \n "
+      "(Depth First / Best Bound First) with (Empty, Naive, Guess) initial "
+      "solution\n"
+      "For a default run, launch the program without arguments");
   auto &random_group = program.add_mutually_exclusive_group();
 
   random_group.add_argument("-s", "--seed")
       .help("seed used for generating the sequence of problems")
       .scan<'u', std::size_t>()
-      .default_value<std::size_t>(100);
+      .default_value<std::size_t>(100)
+      .nargs(1)
+      .required();
   random_group.add_argument("--random")
       .help("choose a random initial seed for the sequence of problems")
       .flag();
   program.add_argument("-v")
       .help("number of sample used for generating the whole problem")
       .scan<'u', std::size_t>()
+      .required()
+      .nargs(1)
       .default_value<std::size_t>(5);
   program.add_argument("-m")
       .help("normalizer used for generating the whole problem")
       .scan<'g', double>()
+      .required()
+      .nargs(1)
       .default_value<double>(20.);
   program.add_argument("--samples")
       .help("number of samples for each problem dimension")
       .scan<'u', std::size_t>()
+      .required()
+      .nargs(1)
       .default_value<std::size_t>(10);
   program.add_argument("--sizes")
       .help(
           "start, end, step: size N of the problems will be in [start, end). ")
       .nargs(1, 3)
       .default_value(std::vector<std::size_t>{40, 100, 10})
+      .required()
       .scan<'u', std::size_t>();
   program.add_argument("-o", "--output-file")
       .help("specify the file output, only for raw data")
+      .required()
+      .nargs(1)
       .default_value("bench.csv");
+  program.add_argument("--quiet")
+      .help("which part of the output should not be printed")
+      .default_value(std::string("none"))
+      .choices("none", "all", "prog", "stat")
+      .nargs(1)
+      .required();
 
   try {
     program.parse_args(argc, argv);
@@ -81,6 +107,18 @@ int main(int argc, char *argv[]) {
   auto sizes = program.get<std::vector<std::size_t>>("--sizes");
   auto filename = program.get<std::string>("-o");
   auto seed = program.get<std::size_t>("-s");
+  auto quiet = program.get<std::string>("--quiet");
+
+  bool progress{true}, statistics{true};
+
+  if (quiet == "all") {
+    progress = false;
+    statistics = false;
+  } else if (quiet == "prog") {
+    progress = false;
+  } else if (quiet == "stat") {
+    statistics = false;
+  }
 
   if (program["--random"] == true) {
     std::random_device rd;
@@ -88,11 +126,11 @@ int main(int argc, char *argv[]) {
   }
 
   if (!program.is_used("-o")) {
-    std::cout
+    std::clog
         << "default name for output file lead to overwrite, stop if undesired"
         << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(5));
-    std::cout << "... fine!" << std::endl;
+    std::clog << "... fine!" << std::endl;
   }
 
   if (sizes.size() != 3)
@@ -100,9 +138,11 @@ int main(int argc, char *argv[]) {
   if (sizes.size() != 3)
     sizes.insert(--sizes.end(), 100);
 
-  std::cout << "start benchmark, starting seed: " << seed << std::endl;
-  benchmark(v, m, samples, sizes, filename, seed, true, true);
-  std::cout << "end benchmark" << std::endl;
+  std::clog << "start benchmark, starting seed: " << seed << std::endl;
+  benchmark(v, m, samples, sizes, filename, seed, progress, statistics);
+  std::clog << "end benchmark" << std::endl;
+
+  return 0;
 }
 
 void benchmark(std::size_t v, float m, std::size_t max_n_test,
@@ -131,11 +171,16 @@ void benchmark(std::size_t v, float m, std::size_t max_n_test,
                  << opt.value;                               // compare opt_sol
           time_res[sopt][solver].emplace_back(d);
           node_res[sopt][solver].emplace_back(opt.nodes);
-          print_progress(N, n_test, max_n_test, sopt, solver, partial, total);
+          if (progress)
+            print_progress(N, n_test, max_n_test, sopt, solver, partial, total);
         }
       }
     }
-    print_statistics(time_res, node_res);
+    if (progress)
+      std::cout << std::endl;
+
+    if (statistics)
+      print_statistics(time_res, node_res);
   }
 }
 
@@ -176,13 +221,16 @@ select_solver_variant(const Knapsack &prob, const Bounds &bounds,
 void print_statistics(std::vector<double> time[3][2],
                       std::vector<double> node[3][2]) {
   auto max_n_test{time[0][0].size()};
-  std::cout << std::endl;
-  std::cout << std::left << std::setprecision(4) << std::setw(40) << "time"
-            << std::setw(40) << "nodes" << std::endl;
-  std::cout << std::setw(20) << "depth" << std::setw(20) << "best bound" << "\t"
-            << std::setw(20) << "depth" << std::setw(20) << "best bound"
+  std::vector<std::string> solutions = {"empty", "naive", "guess"};
+
+  std::cout << "\t\t" << std::left << std::setprecision(4) << std::setw(40)
+            << "time (milliseconds)" << std::setw(40) << "number of nodes"
+            << std::endl;
+  std::cout << "\t" << std::setw(16) << "depth" << std::setw(20) << "best bound"
+            << "\t" << std::setw(24) << "depth" << std::setw(20) << "best bound"
             << std::endl;
   for (auto sopt{0}; sopt < 3; ++sopt) {
+    std::cout << solutions[sopt] << ":\t";
     for (auto solver{0}; solver < 2; ++solver) {
       double mean = std::accumulate(time[sopt][solver].begin(),
                                     time[sopt][solver].end(), 0.) /
@@ -217,7 +265,8 @@ void print_progress(
     std::chrono::time_point<std::chrono::high_resolution_clock> &partial,
     std::chrono::time_point<std::chrono::high_resolution_clock> &total) {
   int barWidth = 30;
-  double progress{(n_test * 6. + sopt * 2 + solver) / (max_n_test * 6.)};
+  double progress{((n_test) * 6. + (sopt) * 2 + 1 + solver) /
+                  (max_n_test * 6.)};
   auto c_time = std::chrono::high_resolution_clock::now();
   auto d_total =
       std::chrono::duration_cast<std::chrono::milliseconds>(c_time - total)
@@ -228,10 +277,10 @@ void print_progress(
           .count() /
       1000.;
   std::cout << "size:\t" << N << "\tn test:\t" << n_test + 1 << "/"
-            << max_n_test << "\t" << "["                 //
-            << std::left << std::setw(barWidth)          //
-            << std::string(barWidth * progress + 2, '=') //
-            << "] "                                      //
+            << max_n_test << "\t" << "["             //
+            << std::left << std::setw(barWidth)      //
+            << std::string(barWidth * progress, '=') //
+            << "] "                                  //
             << std::ceil(progress * 100) << " %" << "\t " << d_n << "s\t "
             << d_total << "s" << "\r";
   std::cout.flush();
