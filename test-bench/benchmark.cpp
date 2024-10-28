@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
                 << "  " << (5 - x - 1) << "s\r" << std::flush;
       std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-    std::clog << std::left << std::setw(20)<<"that's  fine!" << std::endl;
+    std::clog << std::left << std::setw(20) << "that's  fine!" << std::endl;
   }
 
   if (sizes.size() != 3)
