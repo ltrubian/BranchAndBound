@@ -8,6 +8,15 @@
 #include <memory>
 #include <utility>
 
+/***********************************************************
+// __START_REQUIRED__: branch and bound algorithm
+const Solution solve_relaxed(const Bounds &bounds) const;
+const double objective(const Solution &solution) const;
+const bool should_var_integer(const std::size_t index) const;
+const Bounds& bounds() const;
+// __END_REQUIRED__
+***********************************************************/
+
 /**
  * Given a subproblem, solve it, check if it is integer and therefore prune the
  * current queue of subproblems or not and add it to the same queue
@@ -27,14 +36,13 @@ const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
  */
 template <typename T, typename Queue>
 std::pair<Solution, std::unique_ptr<Node>>
-branch_bound(const T &problem, const Bounds &bounds,
-             const Solution start_opt = Solution(),
+branch_bound(const T &problem, const Solution start_opt = Solution(),
              std::chrono::seconds max_time = std::chrono::seconds(300)) {
   // set the timer
   auto stop = std::chrono::high_resolution_clock::now() + max_time;
   // set the initial values
   Solution opt_sol{start_opt};
-  Bounds st_bounds{bounds};
+  Bounds st_bounds{problem.bounds()};
   Queue active_subproblems;
 
   // Initialize the root of the tree of all the subproblems that this algorithm
@@ -51,7 +59,7 @@ branch_bound(const T &problem, const Bounds &bounds,
     ExploreNode current_prob = active_subproblems.take_next();
 
     // copy the original bounds and set them according the considered subproblem
-    Bounds current_bounds{bounds};
+    Bounds current_bounds{problem.bounds()};
     current_prob.node.initialize_bounds(current_bounds);
 
     double tmp{current_bounds.upper[current_prob.node.b_index]};
@@ -101,23 +109,25 @@ const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
     return;
   // Irrelevant subproblem: its best (eventual) integer solution is lower than
   // or equal to the current one
-  if (opt.value + 1 > current_sol.value)
+  if (opt.value >= current_sol.value)
     return;
 
   // search for the first non integer value of the solution
   double integral{0.f}, fractional{0.f};
   auto index{0};
+  bool found_branch_var{false};
   for (auto &x : current_sol.solution) {
     fractional = std::modf(x, &integral);
-    if (fractional != 0.f) {
-      index = &x - &current_sol.solution[0];
+    index = &x - &current_sol.solution[0];
+    found_branch_var = fractional != 0.f && problem.should_var_integer(index);
+    if (found_branch_var) {
       break;
     }
   }
   // If the solution is integer (that is higher than the current one it has
   // already been checked) update the solution and prune the queue of
   // subproblems
-  if (fractional == 0.f) {
+  if (!found_branch_var) {
     opt.value = current_sol.value;
     opt.solution = current_sol.solution;
     subproblems.prune(opt.value);

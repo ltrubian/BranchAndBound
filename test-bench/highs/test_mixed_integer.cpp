@@ -7,6 +7,7 @@
 #include <random>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 static float TOL{1e-3};
 
@@ -29,6 +30,23 @@ Bounds random_bounds(std::size_t n, std::size_t seed) {
   return bounds;
 };
 
+std::vector<bool> mixed_integer(std::size_t n, std::size_t seed) {
+  std::vector<bool> res(n);
+  std::mt19937_64 gen(seed);
+  std::uniform_int_distribution<std::size_t> dis(0, 1);
+  for (auto i{0ul}; i < n; ++i) {
+    switch (dis(gen)) {
+      case 0:
+        res[i] = true;
+        break;
+      case 1:
+        res[i] = false;
+        break;
+    }
+  }
+  return res;
+};
+
 template <typename T>
 auto select_solver_variant(const T &prob, int select,
                            Solution opt = Solution()) {
@@ -49,6 +67,7 @@ TEST_CASE("knapsack: no starting solution") {
   SECTION("default bounds, fixed problems") {
     std::size_t seed = GENERATE(range(0, 10, 1));
     Knapsack problem{v, m, n, seed};
+    problem.integrality = mixed_integer(n,seed);
     KnapsackHighs problem_highs(problem);
     int selection = GENERATE(range(0, 2));
     auto [sol_my, root] = select_solver_variant(problem, selection);
@@ -61,6 +80,7 @@ TEST_CASE("knapsack: no starting solution") {
   SECTION("default bounds, random problems") {
     std::size_t seed = GENERATE(take(5, random(0, 100000)));
     Knapsack problem{v, m, n, seed};
+    problem.integrality = mixed_integer(n,seed);
     KnapsackHighs problem_highs(problem);
     int selection = GENERATE(range(0, 2));
     auto [sol_my, root] = select_solver_variant(problem, selection);
@@ -75,6 +95,7 @@ TEST_CASE("knapsack: no starting solution") {
   SECTION("random bounds") {
     std::size_t seed = GENERATE(take(5, random(0, 100000)));
     Knapsack problem{v, m, n, seed};
+    problem.integrality = mixed_integer(n,seed);
     KnapsackHighs problem_highs(problem);
     problem._bounds = random_bounds(n, seed);
     int selection = GENERATE(range(0, 2));
@@ -93,6 +114,7 @@ TEST_CASE("knapsack: starting solution") {
   SECTION("default bounds, random problems, naive solution") {
     std::size_t seed = GENERATE(take(5, random(0, 100000)));
     Knapsack problem{v, m, n, seed};
+    problem.integrality = mixed_integer(n,seed);
     KnapsackHighs problem_highs(problem);
     Solution opt = problem.solve_integer_naive();
     int selection = GENERATE(range(0, 2));
@@ -106,6 +128,7 @@ TEST_CASE("knapsack: starting solution") {
   SECTION("default bounds, random problems, better guess") {
     std::size_t seed = GENERATE(take(5, random(0, 100000)));
     Knapsack problem{v, m, n, seed};
+    problem.integrality = mixed_integer(n,seed);
     KnapsackHighs problem_highs(problem);
     Solution opt = problem.solve_integer_guess();
     int selection = GENERATE(range(0, 2));

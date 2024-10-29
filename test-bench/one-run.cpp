@@ -81,12 +81,11 @@ std::ostream &operator<<(std::ostream &os, StartSol &item) {
     return os << "Guess";
   }
 };
-Solution select_start_opt(const Knapsack &prob, const Bounds &bounds,
-                          StartSol select);
+std::vector<bool> mixed_integer(std::size_t n, std::size_t seed);
+Solution select_start_opt(const Knapsack &prob, StartSol select);
 std::tuple<Solution, std::unique_ptr<Node>, long int>
-select_solver_variant(const Knapsack &prob, const Bounds &bounds,
-                      const Solution start_opt, Solver select,
-                      std::chrono::seconds max_time);
+select_solver_variant(const Knapsack &prob, const Solution start_opt,
+                      Solver select, std::chrono::seconds max_time);
 
 int main(int argc, char *argv[]) {
   argparse::ArgumentParser program("one-run");
@@ -111,6 +110,9 @@ int main(int argc, char *argv[]) {
       .required();
   random_group.add_argument("--random")
       .help("choose a random initial seed for the sequence of problems")
+      .flag();
+  program.add_argument("--mixed-integer")
+      .help("the problem will be mixed-integer programms")
       .flag();
   program.add_argument("-v")
       .help("number of sample used for generating the whole problem")
@@ -168,8 +170,10 @@ int main(int argc, char *argv[]) {
     seed = rd();
   }
 
-  const auto problem{Knapsack(v, m, N, seed)};
-  Bounds bounds(N, 0.f, 1.f);
+  auto problem{Knapsack(v, m, N, seed)};
+
+  if (program["--mixed-integer"] == true)
+    problem.integrality = mixed_integer(N, seed);
 
   std::cout << std::left << "problem paramters" << std::endl;
   std::cout << std::setw(5) << "v:" << std::setw(5) << v //
@@ -178,10 +182,10 @@ int main(int argc, char *argv[]) {
             << std::setw(8) << "seed:" << seed << std::endl;
   for (auto &sol : solvs) {
     for (auto &x : stsols) {
-      Solution start_opt{select_start_opt(problem, bounds, x)};
+      Solution start_opt{select_start_opt(problem, x)};
 
       auto [opt, root, d] =
-          select_solver_variant(problem, bounds, start_opt, sol, max_time);
+          select_solver_variant(problem, start_opt, sol, max_time);
 
       std::cout << std::endl;
       std::cout << sol << " ---- " << x << std::endl;
@@ -217,27 +221,25 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-Solution select_start_opt(const Knapsack &prob, const Bounds &bounds,
-                          StartSol select) {
+Solution select_start_opt(const Knapsack &prob, StartSol select) {
   switch (select) {
   case StartSol::None:
     return Solution();
   case StartSol::Naive:
-    return prob.solve_integer_naive(bounds);
+    return prob.solve_integer_naive();
   case StartSol::Guess:
-    return prob.solve_integer_guess(bounds);
+    return prob.solve_integer_guess();
   default:
     throw std::out_of_range("0-2: no other starting solution available");
   }
 }
 
 std::tuple<Solution, std::unique_ptr<Node>, long int>
-select_solver_variant(const Knapsack &prob, const Bounds &bounds,
-                      const Solution start_opt, Solver select,
-                      std::chrono::seconds max_time) {
+select_solver_variant(const Knapsack &prob, const Solution start_opt,
+                      Solver select, std::chrono::seconds max_time) {
   auto time_it = [&](auto F) {
     auto t0 = std::chrono::high_resolution_clock::now();
-    auto [opt, root] = F(prob, bounds, start_opt, max_time);
+    auto [opt, root] = F(prob, start_opt, max_time);
     auto t1 = std::chrono::high_resolution_clock::now();
     auto d =
         std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
@@ -252,3 +254,19 @@ select_solver_variant(const Knapsack &prob, const Bounds &bounds,
     throw std::out_of_range("0-1 are valid, no other variants are allowed");
   }
 }
+std::vector<bool> mixed_integer(std::size_t n, std::size_t seed) {
+  std::vector<bool> res(n);
+  std::mt19937_64 gen(seed);
+  std::uniform_int_distribution<std::size_t> dis(0, 1);
+  for (auto i{0ul}; i < n; ++i) {
+    switch (dis(gen)) {
+      case 0:
+        res[i] = true;
+        break;
+      case 1:
+        res[i] = false;
+        break;
+    }
+  }
+  return res;
+};

@@ -10,12 +10,16 @@
  * My class of the Knapsack problem
  */
 struct Knapsack {
+  double capacity;
   std::vector<double> prices;
   std::vector<double> weights;
-  double capacity;
+  std::vector<bool> integrality;
+  Bounds _bounds;
+
+
   explicit Knapsack(std::size_t n)
-      : prices{std::vector<double>(n)}, weights{std::vector<double>(n)},
-        capacity{0.f} {};
+      : prices(n), weights(n),
+        capacity{0.f}, integrality(n) {};
 
   /**
    * Random generator of Knapsack. It follows the step of the file
@@ -23,13 +27,18 @@ struct Knapsack {
    */
   explicit Knapsack(std::size_t v, double m, std::size_t n, std::size_t seed);
 
-  const Solution solve_relaxed(const Bounds &bounds) const;
-  const Solution solve_integer_naive(const Bounds &bounds) const;
-  const Solution solve_integer_guess(const Bounds &bounds) const;
-
-  const double objective(const std::vector<double> &solution) const;
-
+  const Solution solve_integer_naive() const;
+  const Solution solve_integer_guess() const;
   const bool is_feasible(const Solution&) const;
+
+  // START_REQUIRED: branch and bound algorithm
+  const Solution solve_relaxed(const Bounds &bounds) const;
+  const double objective(const Solution &solution) const;
+  inline const bool should_var_integer(const std::size_t index) const {
+    return integrality[index];
+  };
+  const Bounds& bounds() const { return this->_bounds;};
+  // END_REQUIRED
 };
 
 std::ostream &operator<<(std::ostream &os, Knapsack &item);

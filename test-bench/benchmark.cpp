@@ -14,12 +14,13 @@
 #include <string>
 #include <thread>
 
-Solution select_start_opt(const Knapsack &prob, const Bounds &bounds,
-                          int select);
+Solution select_start_opt(const Knapsack &prob, int select);
 
 std::tuple<Solution, std::unique_ptr<Node>, long int>
-select_solver_variant(const Knapsack &prob, const Bounds &bounds,
-                      const Solution start_opt, int select);
+select_solver_variant(const Knapsack &prob, const Solution start_opt,
+                      int select);
+
+std::vector<bool> mixed_integer(std::size_t n, std::size_t seed);
 
 void print_statistics(std::vector<double> time[3][2],
                       std::vector<double> node[3][2]);
@@ -31,7 +32,8 @@ void print_progress(
 
 void benchmark(std::size_t v, float m, std::size_t max_n_test,
                std::vector<std::size_t> &sizes, std::string filename,
-               std::size_t seed, bool progress, bool statistics);
+               std::size_t seed, bool progress, bool statistics,
+               bool mixed_int);
 
 int main(int argc, char *argv[]) {
   argparse::ArgumentParser program("benchmark");
@@ -56,6 +58,9 @@ int main(int argc, char *argv[]) {
       .required();
   random_group.add_argument("--random")
       .help("choose a random initial seed for the sequence of problems")
+      .flag();
+  program.add_argument("--mixed-integer")
+      .help("the problem will be mixed-integer programms")
       .flag();
   program.add_argument("-v")
       .help("number of sample used for generating the whole problem")
@@ -108,6 +113,10 @@ int main(int argc, char *argv[]) {
   auto filename = program.get<std::string>("-o");
   auto seed = program.get<std::size_t>("-s");
   auto quiet = program.get<std::string>("--quiet");
+  bool mixed_int{false};
+
+  if (program["--mixed-integer"] == true)
+    mixed_int = true;
 
   bool progress{true}, statistics{true};
 
@@ -143,7 +152,8 @@ int main(int argc, char *argv[]) {
     sizes.insert(--sizes.end(), 100);
 
   std::clog << "start benchmark, starting seed: " << seed << std::endl;
-  benchmark(v, m, samples, sizes, filename, seed, progress, statistics);
+  benchmark(v, m, samples, sizes, filename, seed, progress, statistics,
+            mixed_int);
   std::clog << "end benchmark" << std::endl;
 
   return 0;
@@ -151,7 +161,8 @@ int main(int argc, char *argv[]) {
 
 void benchmark(std::size_t v, float m, std::size_t max_n_test,
                std::vector<std::size_t> &sizes, std::string filename,
-               std::size_t seed, bool progress, bool statistics) {
+               std::size_t seed, bool progress, bool statistics,
+               bool mixed_int) {
   std::mt19937_64 rd(seed);
   std::uniform_int_distribution<std::size_t> di(0);
   std::ofstream result(filename);
@@ -162,13 +173,14 @@ void benchmark(std::size_t v, float m, std::size_t max_n_test,
     auto partial = std::chrono::high_resolution_clock::now();
     for (auto n_test(0); n_test < max_n_test; ++n_test) {
       const auto seed{di(rd)};
-      const auto problem{Knapsack(v, m, N, seed)};
-      const auto bounds{Bounds(N, 0.f, 1.f)};
+      auto problem{Knapsack(v, m, N, seed)};
+      if (mixed_int)
+        problem.integrality = mixed_integer(N, seed);
       for (auto sopt{0}; sopt < 3; ++sopt) {
-        const auto start_opt{select_start_opt(problem, bounds, sopt)};
+        const auto start_opt{select_start_opt(problem, sopt)};
         for (auto solver{0}; solver < 2; ++solver) {
           auto [opt, root, d] =
-              select_solver_variant(problem, bounds, start_opt, solver);
+              select_solver_variant(problem, start_opt, solver);
           result << N << "," << n_test << "," << seed << "," // test id
                  << sopt << "," << solver << ","             // solver id
                  << opt.nodes << "," << d << ","             // bench result
@@ -188,26 +200,25 @@ void benchmark(std::size_t v, float m, std::size_t max_n_test,
   }
 }
 
-Solution select_start_opt(const Knapsack &prob, const Bounds &bounds,
-                          int select) {
+Solution select_start_opt(const Knapsack &prob, int select) {
   switch (select) {
   case 0:
     return Solution();
   case 1:
-    return prob.solve_integer_naive(bounds);
+    return prob.solve_integer_naive();
   case 2:
-    return prob.solve_integer_guess(bounds);
+    return prob.solve_integer_guess();
   default:
     throw std::out_of_range("0-2: no other starting solution available");
   }
 }
 std::tuple<Solution, std::unique_ptr<Node>, long int>
-select_solver_variant(const Knapsack &prob, const Bounds &bounds,
-                      const Solution start_opt, int select) {
+select_solver_variant(const Knapsack &prob, const Solution start_opt,
+                      int select) {
   // Solution opt; Node root(0.);
   auto time_it = [&](auto F) {
     auto t0 = std::chrono::high_resolution_clock::now();
-    auto [opt, root] = F(prob, bounds, start_opt, std::chrono::seconds(300));
+    auto [opt, root] = F(prob, start_opt, std::chrono::seconds(300));
     auto t1 = std::chrono::high_resolution_clock::now();
     auto d =
         std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
@@ -289,3 +300,20 @@ void print_progress(
             << d_total << "s" << "\r";
   std::cout.flush();
 }
+
+std::vector<bool> mixed_integer(std::size_t n, std::size_t seed) {
+  std::vector<bool> res(n);
+  std::mt19937_64 gen(seed);
+  std::uniform_int_distribution<std::size_t> dis(0, 1);
+  for (auto i{0ul}; i < n; ++i) {
+    switch (dis(gen)) {
+    case 0:
+      res[i] = true;
+      break;
+    case 1:
+      res[i] = false;
+      break;
+    }
+  }
+  return res;
+};

@@ -29,6 +29,8 @@ add_test(NAME test-relax
         COMMAND $<TARGET_FILE:test-relax>)
 add_test(NAME test-integer
         COMMAND $<TARGET_FILE:test-integer>)
+add_test(NAME test-mixed-integer
+        COMMAND $<TARGET_FILE:test-mixed-integer>)
 		
 file(GLOB_RECURSE ALL_SOURCE_FILES
     *.c *.h *.cpp *.hpp *.cxx *.hxx *.cc *.hh *.cppm *.ipp *.ixx)
@@ -37,3 +39,5 @@ add_custom_target(format
     -i
     ${ALL_SOURCE_FILES}
 )
+
+

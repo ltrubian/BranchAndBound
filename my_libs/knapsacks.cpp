@@ -15,6 +15,8 @@
 
 Knapsack::Knapsack(std::size_t v, double m, std::size_t n, std::size_t seed)
     : Knapsack{n} {
+  this->_bounds = Bounds(n, 0., 1.);
+  this->integrality = std::vector<bool>(n, true);
   // pairs generation
   std::mt19937_64 gen(seed);
   std::uniform_real_distribution<double> dis_w(1., 1000.);
@@ -62,7 +64,7 @@ const Solution Knapsack::solve_relaxed(const Bounds &bounds) const {
       bounds.lower; // and the lower bounds are the "starting" optimal solution
   if (items_takable == 0) {
     opt_sol.success = true;
-    opt_sol.value = this->objective(opt_sol.solution);
+    opt_sol.value = this->objective(opt_sol);
     return opt_sol;
   }
   real_prices *= (this->prices / this->weights);
@@ -82,19 +84,20 @@ const Solution Knapsack::solve_relaxed(const Bounds &bounds) const {
     opt_sol.solution[*ind] = 1.0;
   }
   opt_sol.success = true;
-  opt_sol.value = this->objective(opt_sol.solution);
+  opt_sol.value = this->objective(opt_sol);
 
   return opt_sol;
 }
-const Solution Knapsack::solve_integer_naive(const Bounds &bounds) const {
-  Solution opt{this->solve_relaxed(bounds)};
+const Solution Knapsack::solve_integer_naive() const {
+  Solution opt{this->solve_relaxed(this->bounds())};
   std::for_each(opt.solution.begin(), opt.solution.end(),
                 [](double &x) { x = std::floor(x); });
-  opt.value = this->objective(opt.solution);
+  opt.value = this->objective(opt);
   return opt;
 };
 
-const Solution Knapsack::solve_integer_guess(const Bounds &bounds) const {
+const Solution Knapsack::solve_integer_guess() const {
+  Bounds bounds{this->bounds()};
   Solution opt_sol{};
   double correct_capacity{this->capacity -
                           std::inner_product(std::begin(bounds.lower),
@@ -113,7 +116,7 @@ const Solution Knapsack::solve_integer_guess(const Bounds &bounds) const {
       bounds.lower; // and the lower bounds are the "starting" optimal solution
   if (items_takable == 0) {
     opt_sol.success = true;
-    opt_sol.value = this->objective(opt_sol.solution);
+    opt_sol.value = this->objective(opt_sol);
     return opt_sol;
   }
   real_prices *= (this->prices / this->weights);
@@ -133,13 +136,13 @@ const Solution Knapsack::solve_integer_guess(const Bounds &bounds) const {
     opt_sol.solution[*ind] = 1.0f;
   }
   opt_sol.success = true;
-  opt_sol.value = this->objective(opt_sol.solution);
+  opt_sol.value = this->objective(opt_sol);
 
   return opt_sol;
 }
-const double Knapsack::objective(const std::vector<double> &solution) const {
-  return std::inner_product(solution.begin(), solution.end(), prices.begin(),
-                            0.);
+const double Knapsack::objective(const Solution &opt) const {
+  return std::inner_product(opt.solution.begin(), opt.solution.end(),
+                            prices.begin(), 0.);
 }
 
 const bool Knapsack::is_feasible(const Solution &opt) const {
@@ -168,10 +171,10 @@ std::istream &operator>>(std::istream &is, Knapsack &item) {
 
 template <>
 std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<Knapsack, QueueDepth>(const Knapsack &, const Bounds &, Solution,
+branch_bound<Knapsack, QueueDepth>(const Knapsack &, Solution,
                                    std::chrono::seconds);
 
 template <>
 std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<Knapsack, QueueBestBound>(const Knapsack &, const Bounds &,
-                                       Solution, std::chrono::seconds);
+branch_bound<Knapsack, QueueBestBound>(const Knapsack &, Solution,
+                                       std::chrono::seconds);

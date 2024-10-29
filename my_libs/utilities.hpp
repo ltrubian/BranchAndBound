@@ -1,9 +1,6 @@
 #ifndef __UTILITIES__LT
 #define __UTILITIES__LT
 
-#include <cassert>
-#include <cmath>
-#include <iostream>
 #include <limits>
 #include <list>
 #include <memory>
@@ -22,27 +19,22 @@ struct Solution {
   Solution()
       : success{false}, nodes{0},
         value{-std::numeric_limits<double>::infinity()},
-        solution{std::vector<double>()},
-        gap{std::numeric_limits<double>::infinity()} {};
+        gap{std::numeric_limits<double>::infinity()}, solution() {};
 
   bool is_integer() const;
 };
 
-std::ostream &operator<<(std::ostream &os, Solution &item);
-
-std::istream &operator>>(std::istream &is, Solution &item);
 
 struct Bounds {
   std::vector<double> lower;
   std::vector<double> upper;
 
-  Bounds() : lower{std::vector<double>()}, upper{std::vector<double>()} {};
-  Bounds(std::size_t n, double low, double up)
-      : lower{std::vector<double>(n, low)},
-        upper{std::vector<double>(n, up)} {};
+  Bounds() = default;
+  Bounds(std::size_t n, double low, double up) : lower(n, low), upper(n, up) {};
   explicit Bounds(std::size_t n)
       : Bounds(n, -std::numeric_limits<double>::infinity(),
-               std::numeric_limits<double>::infinity()){};
+               std::numeric_limits<double>::infinity()) {};
+
   std::vector<double> &operator[](std::size_t i) {
     switch (i) {
     case 0:
@@ -74,10 +66,10 @@ struct Node {
   Node() = default;
   explicit Node(double value)
       : value(value), b_index{0}, b_value{0.}, childs{nullptr},
-        parent(nullptr){};
+        parent(nullptr) {};
 
   Node(double value, Node *parent) : Node(value) { this->parent = parent; };
-  ~Node(){};
+  ~Node() {};
 
   void initialize_bounds(Bounds &bounds) const {
     if (parent == nullptr)
@@ -115,7 +107,7 @@ struct ExploreNode {
   double value;
   Node &node;
 
-  ExploreNode(Node &node) : value(node.value), node(node){};
+  ExploreNode(Node &node) : value(node.value), node(node) {};
 };
 
 /**
@@ -137,7 +129,7 @@ struct QueueBestBound {
 
   void prune(const double &value) {
     auto ex_node{queue.begin()};
-    while (ex_node != queue.end() && ex_node->value < value + 1) {
+    while (ex_node != queue.end() && ex_node->value <= value) {
       ex_node = queue.erase(ex_node);
     }
   };
@@ -167,7 +159,7 @@ struct QueueDepth {
 
   void prune(const double &value) {
     for (auto ex_node{queue.begin()}; ex_node != queue.end();) {
-      if (ex_node->value < value + 1)
+      if (ex_node->value <= value)
         ex_node = queue.erase(ex_node);
       else
         ++ex_node;

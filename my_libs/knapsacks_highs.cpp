@@ -2,7 +2,6 @@
 #include "Highs.h"
 #include "branch_and_bound.hpp"
 #include "utilities.hpp"
-#include <cstdio>
 #include <lp_data/HConst.h>
 #include <lp_data/HStruct.h>
 #include <lp_data/HighsStatus.h>
@@ -10,7 +9,9 @@
 #include <utility>
 #include <vector>
 
-const Solution KnapsackHighs::solve_relaxed(const Bounds &bounds) {
+const Solution KnapsackHighs::solve_highs(Highs &highs,
+                                          const Bounds &bounds) const {
+
   Solution opt_sol{};
 
   HighsStatus return_status;
@@ -34,19 +35,17 @@ const Solution KnapsackHighs::solve_relaxed(const Bounds &bounds) {
   return opt_sol;
 }
 
-const double
-KnapsackHighs::objective(const std::vector<double> &solution) const {
-  return std::inner_product(solution.begin(), solution.end(),
+const double KnapsackHighs::objective(const Solution &opt) const {
+  return std::inner_product(opt.solution.begin(), opt.solution.end(),
                             problem.lp_.col_cost_.begin(), 0.);
 }
 
 template <>
 std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<KnapsackHighs, QueueDepth>(const KnapsackHighs &, const Bounds &,
-                                        Solution, std::chrono::seconds);
+branch_bound<KnapsackHighs, QueueDepth>(const KnapsackHighs &, Solution,
+                                        std::chrono::seconds);
 
 template <>
 std::pair<Solution, std::unique_ptr<Node>>
-branch_bound<KnapsackHighs, QueueBestBound>(const KnapsackHighs &,
-                                            const Bounds &, Solution,
+branch_bound<KnapsackHighs, QueueBestBound>(const KnapsackHighs &, Solution,
                                             std::chrono::seconds);
