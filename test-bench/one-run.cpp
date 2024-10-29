@@ -2,11 +2,13 @@
 #include "branch_and_bound.hpp"
 #include "knapsacks.hpp"
 #include "utilities.hpp"
+#include <cassert>
 #include <chrono>
 #include <cstddef>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <ostream>
 #include <random>
 #include <string>
 #include <thread>
@@ -19,61 +21,210 @@
 // s_k = 12696456601695067945;
 // s_k = 1409891033439146690;
 
+enum class Solver {
+  Depth = 0,
+  BestBound = 1,
+};
+
+Solver solver(std::string &str) {
+  if (str == "depth")
+    return Solver::Depth;
+  if (str == "bestbound")
+    return Solver::BestBound;
+  throw std::bad_cast();
+};
+
+std::vector<Solver> solvers(std::vector<std::string> vec) {
+  std::vector<Solver> res;
+  auto last{std::unique(vec.begin(), vec.end())};
+  for (auto item{vec.begin()}; item != last; ++item)
+    res.emplace_back(solver(*item));
+  return res;
+};
+
+std::ostream &operator<<(std::ostream &os, Solver &item) {
+  switch (item) {
+  case Solver::Depth:
+    return os << "Depth First";
+  case Solver::BestBound:
+    return os << "Best Bound First";
+  }
+};
+enum class StartSol {
+  None = 0,
+  Naive = 1,
+  Guess = 2,
+};
+StartSol startsol(std::string &str) {
+  if (str == "none")
+    return StartSol::None;
+  if (str == "naive")
+    return StartSol::Naive;
+  if (str == "guess")
+    return StartSol::Guess;
+  throw std::bad_cast();
+};
+std::vector<StartSol> startsols(std::vector<std::string> vec) {
+  std::vector<StartSol> res;
+  auto last{std::unique(vec.begin(), vec.end())};
+  for (auto item{vec.begin()}; item != last; ++item)
+    res.emplace_back(startsol(*item));
+  return res;
+};
+std::ostream &operator<<(std::ostream &os, StartSol &item) {
+  switch (item) {
+  case StartSol::None:
+    return os << "None";
+  case StartSol::Naive:
+    return os << "Naive";
+  case StartSol::Guess:
+    return os << "Guess";
+  }
+};
 Solution select_start_opt(const Knapsack &prob, const Bounds &bounds,
-                          int select);
+                          StartSol select);
 std::tuple<Solution, std::unique_ptr<Node>, long int>
 select_solver_variant(const Knapsack &prob, const Bounds &bounds,
-                      const Solution start_opt, int select, std::chrono::seconds max_time);
+                      const Solution start_opt, Solver select,
+                      std::chrono::seconds max_time);
 
 int main(int argc, char *argv[]) {
-  std::random_device rd;
-  std::uniform_int_distribution<std::size_t> di(0);
-  std::size_t n{10};
-  std::size_t seed{di(rd)};
-  Knapsack prob(2, 3, 10, 1);
-  Solution start_opt;
-  Bounds real(prob.prices.size(), 0.f, 1.f);
-  std::size_t select;
-  auto [opt, root, d] = select_solver_variant(prob, real, start_opt, select, std::chrono::seconds(300));
+  argparse::ArgumentParser program("one-run");
+  program.set_usage_max_line_width(60);
+  program.set_usage_break_on_mutex();
+  program.set_assign_chars(" =");
+  program.add_description(
+      "Solve a single Knapsack problem with one or both "
+      "the solvers starting with no or any solution\n The "
+      "solvers depends on how the queue of subproblems is "
+      "processed (depth-first or best-bound-first).\n More solvers and "
+      "starting solution can be provided but all the algorithms are run to "
+      "solve the same problem");
 
+  auto &random_group = program.add_mutually_exclusive_group();
 
+  random_group.add_argument("-s", "--seed")
+      .help("seed used for generating the sequence of problems")
+      .scan<'u', std::size_t>()
+      .default_value<std::size_t>(100)
+      .nargs(1)
+      .required();
+  random_group.add_argument("--random")
+      .help("choose a random initial seed for the sequence of problems")
+      .flag();
+  program.add_argument("-v")
+      .help("number of sample used for generating the whole problem")
+      .scan<'u', std::size_t>()
+      .required()
+      .nargs(1)
+      .default_value<std::size_t>(5);
+  program.add_argument("-m")
+      .help("normalizer used for generating the whole problem")
+      .scan<'g', double>()
+      .required()
+      .nargs(1)
+      .default_value<double>(20.);
+  program.add_argument("-N")
+      .help("Size of the problem")
+      .scan<'u', std::size_t>()
+      .required()
+      .nargs(1)
+      .default_value<std::size_t>(100);
+  program.add_argument("--solver")
+      .help("types of solver to compare (depth/bestbound)")
+      .required()
+      .nargs(1, 3)
+      .default_value(std::vector<std::string>({"bestbound"}));
+  program.add_argument("--start-sol")
+      .help("types of starting solution (none/naive/guess)")
+      .required()
+      .nargs(1, 3)
+      .default_value(std::vector<std::string>({"none"}));
+  program.add_argument("--max-time")
+      .help("number of seconds given to the solver to solve the problem")
+      .scan<'u', std::size_t>()
+      .required()
+      .nargs(1)
+      .default_value<std::size_t>(300);
 
+  try {
+    program.parse_args(argc, argv);
+  } catch (const std::exception &err) {
+    std::cerr << err.what() << std::endl;
+    std::cerr << program;
+    return 1;
+  }
 
-  std::cout << "seed:\t" << seed << std::endl;
-  std::cout << prob.prices.size() << "\t" << opt.success << "\t"
-            << std::setprecision(20) << opt.nodes << "\t" << opt.value
-            << std::endl;
-  std::cout << "\n gap: " << opt.gap << std::endl;
-  std::cout << opt.is_integer() << "\t" << prob.is_feasible(opt) << std::endl;
+  std::size_t v = program.get<std::size_t>("-v");
+  double m = program.get<double>("-m");
+  std::size_t N = program.get<std::size_t>("-N");
+  auto seed = program.get<std::size_t>("-s");
+  auto solvs = solvers(program.get<std::vector<std::string>>("--solver"));
+  auto stsols = startsols(program.get<std::vector<std::string>>("--start-sol"));
+  auto max_time = std::chrono::seconds(program.get<std::size_t>("--max-time"));
 
-  std::cout << "nodes in the tree: " << root->count_node() << std::endl;
+  if (program["--random"] == true) {
+    std::random_device rd;
+    seed = rd();
+  }
 
+  const auto problem{Knapsack(v, m, N, seed)};
+  Bounds bounds(N, 0.f, 1.f);
 
+  std::cout << std::left << "problem paramters" << std::endl;
+  std::cout << std::setw(5) << "v:" << std::setw(5) << v //
+            << std::setw(5) << "m:" << std::setw(5) << m //
+            << std::setw(8) << "N:" << std::setw(5) << N //
+            << std::setw(8) << "seed:" << seed << std::endl;
+  for (auto &sol : solvs) {
+    for (auto &x : stsols) {
+      Solution start_opt{select_start_opt(problem, bounds, x)};
 
+      auto [opt, root, d] =
+          select_solver_variant(problem, bounds, start_opt, sol, max_time);
 
+      std::cout << std::endl;
+      std::cout << sol << " ---- " << x << std::endl;
+      std::cout << std::boolalpha << std::setprecision(10) //
+                << "success: " << opt.success              //
+                << std::right << std::setw(15)
+                << "integrality: " << opt.is_integer() //
+                << std::setw(15) << "feasibility: " << problem.is_feasible(opt)
+                << std::endl;
+      std::cout << std::left;
+      std::cout << std::setw(8) << "nodes:" << std::setw(10) << opt.nodes //
+                << std::setw(10) << "time(ms):" << std::setw(7) << d      //
+                << std::endl;
+      std::cout << std::setw(8) << "value:" << std::setw(10) << opt.value  //
+                << std::setw(10) << "last gap:" << std::setw(7) << opt.gap //
+                << std::endl;
+    }
+  }
 
+  /*
+    std::cout << "nodes in the tree: " << root->count_node() << std::endl;
 
-  std::string filename{"test.json"};
-  std::ofstream istrm(filename);
-  istrm << root->to_json() << "\n";
-  filename = "problem.txt";
-  std::ofstream pr_file(filename);
-  pr_file << prob;
-  filename = "solution_my.txt";
-  std::ofstream sol_my(filename);
-  sol_my << opt;
-
+    std::string filename{"test.json"};
+    std::ofstream istrm(filename);
+    istrm << root->to_json() << "\n";
+    filename = "problem.txt";
+    std::ofstream pr_file(filename);
+    pr_file << prob;
+    filename = "solution_my.txt";
+    std::ofstream sol_my(filename);
+    sol_my << opt;
+  */
   return 0;
 }
 
 Solution select_start_opt(const Knapsack &prob, const Bounds &bounds,
-                          int select) {
+                          StartSol select) {
   switch (select) {
-  case 0:
+  case StartSol::None:
     return Solution();
-  case 1:
+  case StartSol::Naive:
     return prob.solve_integer_naive(bounds);
-  case 2:
+  case StartSol::Guess:
     return prob.solve_integer_guess(bounds);
   default:
     throw std::out_of_range("0-2: no other starting solution available");
@@ -82,19 +233,20 @@ Solution select_start_opt(const Knapsack &prob, const Bounds &bounds,
 
 std::tuple<Solution, std::unique_ptr<Node>, long int>
 select_solver_variant(const Knapsack &prob, const Bounds &bounds,
-                      const Solution start_opt, int select, std::chrono::seconds max_time) {
+                      const Solution start_opt, Solver select,
+                      std::chrono::seconds max_time) {
   auto time_it = [&](auto F) {
     auto t0 = std::chrono::high_resolution_clock::now();
-    auto [opt, root] = F(prob, bounds, start_opt, max_time );
+    auto [opt, root] = F(prob, bounds, start_opt, max_time);
     auto t1 = std::chrono::high_resolution_clock::now();
     auto d =
         std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
     return std::make_tuple(std::move(opt), std::move(root), std::move(d));
   };
   switch (select) {
-  case 0:
+  case Solver::Depth:
     return time_it(branch_bound<Knapsack, QueueDepth>);
-  case 1:
+  case Solver::BestBound:
     return time_it(branch_bound<Knapsack, QueueBestBound>);
   default:
     throw std::out_of_range("0-1 are valid, no other variants are allowed");
