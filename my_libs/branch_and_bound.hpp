@@ -30,7 +30,23 @@ const Bounds& bounds() const;
  */
 template <typename T, typename Queue>
 const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
-                           Node &node, Queue &subproblems);
+                           Node &node, Queue &subproblems,
+                           std::function<bool(double, double)> is_irrelevant);
+
+/**
+ * It returns the comparison operator that is suited for mixed-integer
+ * programming (the first, in the case at least a variable it is not integral)
+ * or integer programming (the last, in the case all variables are integral)
+ */
+template <typename T>
+std::function<bool(double, double)> optimal_comparison(const T &problem) {
+  for (std::size_t var{0}; var < problem.bounds().lower.size(); ++var) {
+    if (!problem.should_var_integer(var)) {
+      return [](double current, double optimum) { return current <= optimum; };
+    }
+  }
+  return [](double current, double optimum) { return current < optimum + 1.; };
+}
 /**
  *
  */
@@ -44,13 +60,14 @@ branch_bound(const T &problem, const Solution start_opt = Solution(),
   Solution opt_sol{start_opt};
   Bounds st_bounds{problem.bounds()};
   Queue active_subproblems;
+  auto is_irrelevant = optimal_comparison(problem);
 
-  // Initialize the root of the tree of all the subproblems that this algorithm
-  // will consider
+  // Initialize the root of the tree of all the subproblems that this
+  // algorithm will consider
   std::unique_ptr<Node> root{new Node()};
   // solve the relaxed problem and branch
   prune_or_branch<T, Queue>(problem, st_bounds, opt_sol, *root,
-                            active_subproblems);
+                            active_subproblems, is_irrelevant);
 
   while (!active_subproblems.empty() &&
          std::chrono::high_resolution_clock::now() < stop) {
@@ -80,7 +97,7 @@ branch_bound(const T &problem, const Solution start_opt = Solution(),
       // branch (otherwise)
       prune_or_branch<T, Queue>(problem, current_bounds, opt_sol,
                                 *current_prob.node.childs[i],
-                                active_subproblems);
+                                active_subproblems, is_irrelevant);
     }
 
     // update the current gap between the best optimal integer solution and the
@@ -98,7 +115,8 @@ branch_bound(const T &problem, const Solution start_opt = Solution(),
 
 template <typename T, typename Queue>
 const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
-                           Node &node, Queue &subproblems) {
+                           Node &node, Queue &subproblems,
+                           std::function<bool(double, double)> is_irrelevant) {
   ++opt.nodes;
   // solve subproblem with specific bounds and associate a new Node
   Solution current_sol{problem.solve_relaxed(bounds)};
@@ -109,7 +127,7 @@ const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
     return;
   // Irrelevant subproblem: its best (eventual) integer solution is lower than
   // or equal to the current one
-  if (opt.value >= current_sol.value)
+  if (is_irrelevant(current_sol.value, opt.value))
     return;
 
   // search for the first non integer value of the solution
@@ -130,7 +148,7 @@ const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
   if (!found_branch_var) {
     opt.value = current_sol.value;
     opt.solution = current_sol.solution;
-    subproblems.prune(opt.value);
+    subproblems.prune(opt.value, is_irrelevant);
   }
   // Update the node and add it to the queue of subproblems
   else {

@@ -4,8 +4,8 @@
 #include "Highs.h"
 #include "knapsacks.hpp"
 #include "utilities.hpp"
-#include <lp_data/HConst.h>
 #include <algorithm>
+#include <lp_data/HConst.h>
 
 /**
  * Class of the Knapsack problem, interface for HiGHS
@@ -35,13 +35,13 @@ struct KnapsackHighs {
     problem.lp_.col_lower_ = std::vector<double>(problem_size, 0.);
     problem.lp_.col_upper_ = std::vector<double>(problem_size, 1.);
 
-    auto tmp = std::vector<HighsVarType>(problem_size, HighsVarType::kContinuous);
-    for (std::size_t ind{0}; ind < problem_size; ++ind){
-      if(model.should_var_integer(ind))
+    auto tmp =
+        std::vector<HighsVarType>(problem_size, HighsVarType::kContinuous);
+    for (std::size_t ind{0}; ind < problem_size; ++ind) {
+      if (model.should_var_integer(ind))
         tmp[ind] = HighsVarType::kInteger;
     }
     problem.lp_.integrality_ = tmp;
-
   };
 
   /**

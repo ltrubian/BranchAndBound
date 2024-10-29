@@ -24,7 +24,6 @@ struct Solution {
   bool is_integer() const;
 };
 
-
 struct Bounds {
   std::vector<double> lower;
   std::vector<double> upper;
@@ -127,9 +126,10 @@ struct BestBoundFirst {
 struct QueueBestBound {
   std::multiset<ExploreNode, BestBoundFirst> queue;
 
-  void prune(const double &value) {
+  void prune(const double &value,
+             std::function<bool(double, double)> is_irrelevant) {
     auto ex_node{queue.begin()};
-    while (ex_node != queue.end() && ex_node->value <= value) {
+    while (ex_node != queue.end() && is_irrelevant(ex_node->value, value)) {
       ex_node = queue.erase(ex_node);
     }
   };
@@ -157,9 +157,10 @@ struct QueueBestBound {
 struct QueueDepth {
   std::list<ExploreNode> queue;
 
-  void prune(const double &value) {
+  void prune(const double &value,
+             std::function<bool(double, double)> is_irrelevant) {
     for (auto ex_node{queue.begin()}; ex_node != queue.end();) {
-      if (ex_node->value <= value)
+      if (is_irrelevant(ex_node->value, value))
         ex_node = queue.erase(ex_node);
       else
         ++ex_node;

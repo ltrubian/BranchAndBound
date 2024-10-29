@@ -16,10 +16,8 @@ struct Knapsack {
   std::vector<bool> integrality;
   Bounds _bounds;
 
-
   explicit Knapsack(std::size_t n)
-      : prices(n), weights(n),
-        capacity{0.f}, integrality(n) {};
+      : prices(n), weights(n), capacity{0.f}, integrality(n) {};
 
   /**
    * Random generator of Knapsack. It follows the step of the file
@@ -29,7 +27,7 @@ struct Knapsack {
 
   const Solution solve_integer_naive() const;
   const Solution solve_integer_guess() const;
-  const bool is_feasible(const Solution&) const;
+  const bool is_feasible(const Solution &) const;
 
   // START_REQUIRED: branch and bound algorithm
   const Solution solve_relaxed(const Bounds &bounds) const;
@@ -37,7 +35,7 @@ struct Knapsack {
   inline const bool should_var_integer(const std::size_t index) const {
     return integrality[index];
   };
-  const Bounds& bounds() const { return this->_bounds;};
+  const Bounds &bounds() const { return this->_bounds; };
   // END_REQUIRED
 };
 

@@ -260,12 +260,12 @@ std::vector<bool> mixed_integer(std::size_t n, std::size_t seed) {
   std::uniform_int_distribution<std::size_t> dis(0, 1);
   for (auto i{0ul}; i < n; ++i) {
     switch (dis(gen)) {
-      case 0:
-        res[i] = true;
-        break;
-      case 1:
-        res[i] = false;
-        break;
+    case 0:
+      res[i] = true;
+      break;
+    case 1:
+      res[i] = false;
+      break;
     }
   }
   return res;

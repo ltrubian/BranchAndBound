@@ -5,7 +5,6 @@
 #include <iostream>
 #include <string>
 
-
 std::ostream &operator<<(std::ostream &os, Solution &item) {
   os << item.value << "\n";
   for (auto &i : item.solution) {
@@ -22,7 +21,6 @@ std::istream &operator>>(std::istream &is, Solution &item) {
   }
   return is;
 };
-
 
 int main(int argc, char *argv[]) {
   std::string filename = "solution.txt";

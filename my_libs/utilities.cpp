@@ -11,4 +11,3 @@ bool Solution::is_integer() const {
   }
   return true;
 }
-
