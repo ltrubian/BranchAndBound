@@ -6,9 +6,9 @@
 #include <string>
 
 std::ostream &operator<<(std::ostream &os, Solution &item) {
-  os << item.value << "\n";
+  os << item.value;
   for (auto &i : item.solution) {
-    os << i << "\n";
+    os << "\n" << i;
   }
   return os;
 };

@@ -42,13 +42,17 @@ std::vector<Solver> solvers(std::vector<std::string> vec) {
   return res;
 };
 
-std::ostream &operator<<(std::ostream &os, Solver &item) {
+std::string to_string(Solver &item) {
   switch (item) {
   case Solver::Depth:
-    return os << "Depth First";
+    return "Depth First";
   case Solver::BestBound:
-    return os << "Best Bound First";
+    return "Best Bound First";
   }
+};
+
+std::ostream &operator<<(std::ostream &os, Solver &item) {
+  return os << to_string(item);
 };
 enum class StartSol {
   None = 0,
@@ -71,16 +75,34 @@ std::vector<StartSol> startsols(std::vector<std::string> vec) {
     res.emplace_back(startsol(*item));
   return res;
 };
-std::ostream &operator<<(std::ostream &os, StartSol &item) {
+std::string to_string(StartSol &item) {
   switch (item) {
   case StartSol::None:
-    return os << "None";
+    return "None";
   case StartSol::Naive:
-    return os << "Naive";
+    return "Naive";
   case StartSol::Guess:
-    return os << "Guess";
+    return "Guess";
   }
 };
+
+std::ostream &operator<<(std::ostream &os, StartSol &item) {
+  return os << to_string(item);
+};
+
+std::string to_filename(std::string name) {
+  std::replace(name.begin(), name.end(), ' ', '_');
+  return name;
+};
+
+std::ostream &operator<<(std::ostream &os, Solution &item) {
+  os << item.value;
+  for (auto &i : item.solution) {
+    os << "\n" << i;
+  }
+  return os;
+};
+
 std::vector<bool> mixed_integer(std::size_t n, std::size_t seed);
 Solution select_start_opt(const Knapsack &prob, StartSol select);
 std::tuple<Solution, std::unique_ptr<Node>, long int>
@@ -148,6 +170,9 @@ int main(int argc, char *argv[]) {
       .required()
       .nargs(1)
       .default_value<std::size_t>(300);
+  program.add_argument("--output")
+      .help("output the problem and solution files")
+      .flag();
 
   try {
     program.parse_args(argc, argv);
@@ -172,8 +197,17 @@ int main(int argc, char *argv[]) {
 
   auto problem{Knapsack(v, m, N, seed)};
 
+  auto id_problem = std::to_string(v) + "_" + std::to_string(m) + "_" //
+                    + std::to_string(N) + "_" + std::to_string(seed); //
+
   if (program["--mixed-integer"] == true)
     problem.integrality = mixed_integer(N, seed);
+
+  if (program["--output"] == true) {
+    std::string filename = id_problem + "_prob.txt";
+    std::ofstream pr_file(filename);
+    pr_file << problem;
+  }
 
   std::cout << std::left << "problem paramters" << std::endl;
   std::cout << std::setw(5) << "v:" << std::setw(5) << v //
@@ -181,14 +215,22 @@ int main(int argc, char *argv[]) {
             << std::setw(8) << "N:" << std::setw(5) << N //
             << std::setw(8) << "seed:" << seed << std::endl;
   for (auto &sol : solvs) {
-    for (auto &x : stsols) {
-      Solution start_opt{select_start_opt(problem, x)};
+    for (auto &starting_sol : stsols) {
+      Solution start_opt{select_start_opt(problem, starting_sol)};
 
       auto [opt, root, d] =
           select_solver_variant(problem, start_opt, sol, max_time);
 
+      if (program["--output"] == true) {
+        std::string filename = id_problem + "_" + to_filename(to_string(sol)) +
+                               "_" + to_filename(to_string(starting_sol)) +
+                               "_sol.txt";
+        std::ofstream sol_my(filename);
+        sol_my << opt;
+      }
+
       std::cout << std::endl;
-      std::cout << sol << " ---- " << x << std::endl;
+      std::cout << sol << " ---- " << starting_sol << std::endl;
       std::cout << std::boolalpha << std::setprecision(10) //
                 << "success: " << opt.success              //
                 << std::right << std::setw(15)
@@ -217,7 +259,7 @@ int main(int argc, char *argv[]) {
     filename = "solution_my.txt";
     std::ofstream sol_my(filename);
     sol_my << opt;
-  */
+*/
   return 0;
 }
 
