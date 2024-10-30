@@ -10,6 +10,7 @@
 #include <iostream>
 #include <ostream>
 #include <random>
+#include <sstream>
 #include <string>
 #include <thread>
 
@@ -21,7 +22,7 @@
 // s_k = 12696456601695067945;
 // s_k = 1409891033439146690;
 
-enum class Solver {
+enum class Solver : long long int {
   Depth = 0,
   BestBound = 1,
 };
@@ -171,8 +172,15 @@ int main(int argc, char *argv[]) {
       .nargs(1)
       .default_value<std::size_t>(300);
   program.add_argument("--output")
-      .help("output the problem and solution files")
-      .flag();
+      .help("output the problem and/or solution files.\n " //
+            " WARNING: present files will be overwritten")
+      .default_value(std::string("none"))
+      .required()
+      .choices("all", "problem", "solution", "none");
+  program.add_argument("--input")
+      .help("input a file with the problem")
+      .default_value(std::string(""))
+      .required();
 
   try {
     program.parse_args(argc, argv);
@@ -189,24 +197,51 @@ int main(int argc, char *argv[]) {
   auto solvs = solvers(program.get<std::vector<std::string>>("--solver"));
   auto stsols = startsols(program.get<std::vector<std::string>>("--start-sol"));
   auto max_time = std::chrono::seconds(program.get<std::size_t>("--max-time"));
+  auto output = program.get<std::string>("--output");
+  auto input = program.get<std::string>("--input");
 
   if (program["--random"] == true) {
     std::random_device rd;
     seed = rd();
   }
 
-  auto problem{Knapsack(v, m, N, seed)};
+  Knapsack problem(0);
 
-  auto id_problem = std::to_string(v) + "_" + std::to_string(m) + "_" //
+  if (program.is_used("--input")) {
+    std::ifstream pr_file(input);
+    pr_file >> problem;
+    // input Knapsack is aasumed to be pure integer problem
+    problem.integrality = std::vector<bool>(problem.prices.size(), true);
+    problem._bounds = Bounds(problem.prices.size(), 0., 1.);
+    if (program.is_used("-v") || program.is_used("-m") ||
+        program.is_used("-N") || program.is_used("--seed"))
+      std::cout << "WARNING: problem input file has higher priority on other "
+                   "problem settings (-v,-n,-N,--seed)"
+                << std::endl;
+  } else {
+    problem = Knapsack(v, m, N, seed);
+  }
+
+  problem.integrality[static_cast<int>(Solver::BestBound)];
+
+  std::stringstream stream_m;
+  stream_m << std::defaultfloat << m;
+  auto id_problem = std::to_string(v) + "_" + stream_m.str() + "_" //
                     + std::to_string(N) + "_" + std::to_string(seed); //
 
   if (program["--mixed-integer"] == true)
     problem.integrality = mixed_integer(N, seed);
 
-  if (program["--output"] == true) {
-    std::string filename = id_problem + "_prob.txt";
-    std::ofstream pr_file(filename);
-    pr_file << problem;
+  if (output == "all" || output == "problem") {
+    if (program.is_used("--input")) {
+      std::cout << "WARNING: the output file of a provided-by-file problem "
+                   "will not be created"
+                << std::endl;
+    } else {
+      std::string filename = id_problem + "_prob.txt";
+      std::ofstream pr_file(filename);
+      pr_file << problem;
+    }
   }
 
   std::cout << std::left << "problem paramters" << std::endl;
@@ -221,10 +256,19 @@ int main(int argc, char *argv[]) {
       auto [opt, root, d] =
           select_solver_variant(problem, start_opt, sol, max_time);
 
-      if (program["--output"] == true) {
-        std::string filename = id_problem + "_" + to_filename(to_string(sol)) +
-                               "_" + to_filename(to_string(starting_sol)) +
-                               "_sol.txt";
+      if (output == "all" || output == "solution") {
+        std::string filename;
+        if (program.is_used("--input")) {
+          auto pos = input.rfind('.');
+          if (pos != std::string::npos) {
+            input.erase(pos);
+          }
+          filename = input;
+        } else {
+          filename = id_problem;
+        }
+        filename += "_" + to_filename(to_string(sol)) + "_" +
+                    to_filename(to_string(starting_sol)) + "_sol.txt";
         std::ofstream sol_my(filename);
         sol_my << opt;
       }
@@ -247,19 +291,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  /*
-    std::cout << "nodes in the tree: " << root->count_node() << std::endl;
-
-    std::string filename{"test.json"};
-    std::ofstream istrm(filename);
-    istrm << root->to_json() << "\n";
-    filename = "problem.txt";
-    std::ofstream pr_file(filename);
-    pr_file << prob;
-    filename = "solution_my.txt";
-    std::ofstream sol_my(filename);
-    sol_my << opt;
-*/
   return 0;
 }
 

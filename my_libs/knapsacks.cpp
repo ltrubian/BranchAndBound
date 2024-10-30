@@ -151,9 +151,9 @@ const bool Knapsack::is_feasible(const Solution &opt) const {
 };
 
 std::ostream &operator<<(std::ostream &os, Knapsack &item) {
-  os << item.prices.size() << " " << item.capacity << "\n";
+  os << item.prices.size() << " " << item.capacity ;
   for (auto i{0}; i < item.prices.size(); ++i) {
-    os << item.prices[i] << " " << item.weights[i] << "\n";
+    os << "\n" << item.prices[i] << " " << item.weights[i];
   }
   return os;
 };
