@@ -175,6 +175,7 @@ int main(int argc, char *argv[]) {
       .help("output the problem and/or solution files.\n " //
             " WARNING: present files will be overwritten")
       .default_value(std::string("none"))
+      .implicit_value(std::string("all"))
       .required()
       .choices("all", "problem", "solution", "none");
   program.add_argument("--input")
@@ -212,7 +213,7 @@ int main(int argc, char *argv[]) {
     pr_file >> problem;
     // input Knapsack is aasumed to be pure integer problem
     problem.integrality = std::vector<bool>(problem.prices.size(), true);
-    problem._bounds = Bounds(problem.prices.size(), 0., 1.);
+    problem.bounds() = Bounds(problem.prices.size(), 0., 1.);
     if (program.is_used("-v") || program.is_used("-m") ||
         program.is_used("-N") || program.is_used("--seed"))
       std::cout << "WARNING: problem input file has higher priority on other "

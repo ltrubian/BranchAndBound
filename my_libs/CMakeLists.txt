@@ -1,7 +1,7 @@
 
-add_library(utilities_lib utilities.cpp)
+add_library(utilities_lib INTERFACE)
 
-target_sources(utilities_lib PUBLIC utilities.hpp)
+target_sources(utilities_lib INTERFACE utilities.hpp)
 
 
 add_library(knapsack_lib knapsacks.cpp)

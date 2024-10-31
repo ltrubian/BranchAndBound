@@ -1,4 +1,3 @@
-
 #include "argparse.hpp"
 #include "branch_and_bound.hpp"
 #include "knapsacks.hpp"

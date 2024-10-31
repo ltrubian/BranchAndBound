@@ -38,6 +38,7 @@ struct Knapsack {
   };
   const Bounds &bounds() const { return this->_bounds; };
   // END_REQUIRED
+  Bounds &bounds() { return this->_bounds; };
 };
 
 std::ostream &operator<<(std::ostream &os, Knapsack &item);
