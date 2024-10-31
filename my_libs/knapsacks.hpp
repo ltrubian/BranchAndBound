@@ -28,6 +28,7 @@ struct Knapsack {
   const Solution solve_integer_naive() const;
   const Solution solve_integer_guess() const;
   const bool is_feasible(const Solution &) const;
+  const bool is_integral(const Solution &) const;
 
   // START_REQUIRED: branch and bound algorithm
   const Solution solve_relaxed(const Bounds &bounds) const;

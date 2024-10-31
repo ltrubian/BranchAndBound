@@ -222,8 +222,6 @@ int main(int argc, char *argv[]) {
     problem = Knapsack(v, m, N, seed);
   }
 
-  problem.integrality[static_cast<int>(Solver::BestBound)];
-
   std::stringstream stream_m;
   stream_m << std::defaultfloat << m;
   auto id_problem = std::to_string(v) + "_" + stream_m.str() + "_" //
@@ -278,7 +276,7 @@ int main(int argc, char *argv[]) {
       std::cout << std::boolalpha << std::setprecision(10) //
                 << "success: " << opt.success              //
                 << std::right << std::setw(15)
-                << "integrality: " << opt.is_integer() //
+                << "integrality: " << problem.is_integral(opt) //
                 << std::setw(15) << "feasibility: " << problem.is_feasible(opt)
                 << std::endl;
       std::cout << std::left;

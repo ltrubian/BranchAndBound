@@ -20,8 +20,6 @@ struct Solution {
       : success{false}, nodes{0},
         value{-std::numeric_limits<double>::infinity()},
         gap{std::numeric_limits<double>::infinity()}, solution() {};
-
-  bool is_integer() const;
 };
 
 struct Bounds {

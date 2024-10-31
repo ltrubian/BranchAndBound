@@ -150,8 +150,20 @@ const bool Knapsack::is_feasible(const Solution &opt) const {
                             opt.solution.begin(), 0.) <= this->capacity;
 };
 
+const bool Knapsack::is_integral(const Solution &opt) const {
+  double fractional{0.}, integral{0.};
+  for (auto &x : opt.solution) {
+    fractional = std::modf(x, &integral);
+    auto index = &x - &opt.solution[0];
+    if (fractional != 0. && this->should_var_integer(index)) {
+      return false;
+    }
+  }
+  return true;
+};
+
 std::ostream &operator<<(std::ostream &os, Knapsack &item) {
-  os << item.prices.size() << " " << item.capacity ;
+  os << item.prices.size() << " " << item.capacity;
   for (auto i{0}; i < item.prices.size(); ++i) {
     os << "\n" << item.prices[i] << " " << item.weights[i];
   }
