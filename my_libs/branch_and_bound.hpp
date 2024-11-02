@@ -7,6 +7,7 @@
 #include <limits>
 #include <memory>
 #include <utility>
+#include <functional>
 
 /***********************************************************
 // __START_REQUIRED__: branch and bound algorithm
