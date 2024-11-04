@@ -4,6 +4,11 @@ add_library(utilities_lib INTERFACE)
 target_sources(utilities_lib INTERFACE utilities.hpp)
 
 
+add_library(interface INTERFACE)
+
+target_sources(interface INTERFACE interface.hpp)
+
+
 add_library(knapsack_lib knapsacks.cpp)
 
 target_sources(knapsack_lib PUBLIC knapsacks.hpp)

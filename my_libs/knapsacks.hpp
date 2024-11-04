@@ -5,6 +5,7 @@
 #include <iostream>
 #include <istream>
 #include <vector>
+#include <optional>
 
 /**
  * My class of the Knapsack problem
@@ -29,13 +30,15 @@ struct Knapsack {
   const Solution solve_integer_guess() const;
   const bool is_feasible(const Solution &) const;
   const bool is_integral(const Solution &) const;
+  const double objective(const Solution &solution) const;
 
   // START_REQUIRED: branch and bound algorithm
   const Solution solve_relaxed(const Bounds &bounds) const;
-  const double objective(const Solution &solution) const;
+
   inline const bool should_var_integer(const std::size_t index) const {
     return integrality[index];
   };
+  const std::optional<double> min_step_objective() const;
   const Bounds &bounds() const { return this->_bounds; };
   // END_REQUIRED
   Bounds &bounds() { return this->_bounds; };

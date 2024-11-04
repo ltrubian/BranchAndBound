@@ -86,6 +86,9 @@ struct KnapsackHighs {
   const double objective(const Solution &solution) const;
   inline const bool should_var_integer(const std::size_t index) const;
   const Bounds &bounds() const;
+  const std::optional<double> min_step_objective() const {
+    return std::nullopt;
+  };
   // __END_REQUIRED__
 };
 

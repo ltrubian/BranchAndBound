@@ -4,16 +4,17 @@
 #include "utilities.hpp"
 #include <chrono>
 #include <cmath>
+#include <functional>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <utility>
-#include <functional>
 
 /***********************************************************
 // __START_REQUIRED__: branch and bound algorithm
 const Solution solve_relaxed(const Bounds &bounds) const;
-const double objective(const Solution &solution) const;
 const bool should_var_integer(const std::size_t index) const;
+const std::optional<double> max_step_objective() const;
 const Bounds& bounds() const;
 // __END_REQUIRED__
 ***********************************************************/
@@ -41,12 +42,17 @@ const void prune_or_branch(const T &problem, Bounds &bounds, Solution &opt,
  */
 template <typename T>
 std::function<bool(double, double)> optimal_comparison(const T &problem) {
+  std::optional<std::size_t> gcd{problem.min_step_objective()};
+  if (!gcd)
+    return [](double current, double optimum) { return current <= optimum; };
+
   for (std::size_t var{0}; var < problem.bounds().lower.size(); ++var) {
     if (!problem.should_var_integer(var)) {
       return [](double current, double optimum) { return current <= optimum; };
     }
   }
-  return [](double current, double optimum) { return current < optimum + 1.; };
+  double a{static_cast<double>(gcd.value())};
+  return [=](double current, double optimum) { return current < optimum + a; };
 }
 /**
  *
@@ -74,31 +80,30 @@ branch_bound(const T &problem, const Solution start_opt = Solution(),
          std::chrono::high_resolution_clock::now() < stop) {
 
     // consider the next subproblem in the queue
-    ExploreNode current_prob = active_subproblems.take_next();
+    Node &current_node = active_subproblems.take_next();
 
     // copy the original bounds and set them according the considered subproblem
     Bounds current_bounds{problem.bounds()};
-    current_prob.node.initialize_bounds(current_bounds);
+    current_node.initialize_bounds(current_bounds);
 
-    double tmp{current_bounds.upper[current_prob.node.b_index]};
+    double tmp{current_bounds.upper[current_node.b_index]};
 
     for (auto i{0}; i < 2; ++i) {
       // inizialize the leaf node and set its parent node
-      current_prob.node.childs[i].reset(new Node(0., &current_prob.node));
+      current_node.childs[i].reset(new Node(0., &current_node));
 
       // for each leaf of the current subproblem adjust the bounds accordingly
-      current_bounds[i][current_prob.node.b_index] =
-          current_prob.node.b_value + 1. * i;
+      current_bounds[i][current_node.b_index] = current_node.b_value + 1. * i;
       // since the bounds are the same a correction must take place
       if (i == 1)
-        current_bounds.upper[current_prob.node.b_index] = tmp;
+        current_bounds.upper[current_node.b_index] = tmp;
 
       // solve the relaxed subproblem and
       // prune  (if integer solution occurs) or
       // branch (otherwise)
       prune_or_branch<T, Queue>(problem, current_bounds, opt_sol,
-                                *current_prob.node.childs[i],
-                                active_subproblems, is_irrelevant);
+                                *current_node.childs[i], active_subproblems,
+                                is_irrelevant);
     }
 
     // update the current gap between the best optimal integer solution and the

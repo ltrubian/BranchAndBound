@@ -8,6 +8,7 @@
 #include <iterator>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <random>
 #include <string>
 #include <utility>
@@ -88,6 +89,20 @@ const Solution Knapsack::solve_relaxed(const Bounds &bounds) const {
 
   return opt_sol;
 }
+
+const std::optional<double> Knapsack::min_step_objective() const {
+  std::size_t gcd{1};
+  double integral{0.}, fractional{0.};
+  for (auto &x : this->prices) {
+    fractional = std::modf(x, &integral);
+    if (fractional != 0)
+      return std::nullopt;
+    std::size_t current{static_cast<std::size_t>(x)};
+    gcd = std::gcd(current, gcd);
+  }
+  return std::make_optional(gcd);
+}
+
 const Solution Knapsack::solve_integer_naive() const {
   Solution opt{this->solve_relaxed(this->bounds())};
   std::for_each(opt.solution.begin(), opt.solution.end(),

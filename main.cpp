@@ -1,6 +1,7 @@
 #include "branch_and_bound.hpp"
 #include "knapsacks.hpp"
 #include "utilities.hpp"
+#include "interface.hpp"
 #include <fstream>
 #include <iostream>
 #include <stdexcept>

@@ -1,6 +1,7 @@
 #ifndef __UTILITIES__LT
 #define __UTILITIES__LT
 
+#include <functional>
 #include <limits>
 #include <list>
 #include <memory>
@@ -8,7 +9,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <functional>
 
 struct Solution {
   bool success;
@@ -136,18 +136,16 @@ struct QueueBestBound {
   double max_value() const { return (--queue.end())->value; };
 
   bool empty() const { return queue.empty(); };
-  std::size_t size() const { return queue.size(); }
 
   /**
    * Take the node with the largest value available
    */
-  ExploreNode take_next() {
-    return std::move(queue.extract(--queue.end()).value());
+  Node &take_next() {
+    auto x = std::move(queue.extract(--queue.end()).value());
+    return x.node;
   };
 
-  template <class... Args> void emplace(Args &&...args) {
-    queue.emplace(std::forward<Args>(args)...);
-  };
+  void emplace(Node &node) { queue.emplace(node); };
 };
 
 /**
@@ -176,17 +174,14 @@ struct QueueDepth {
   };
 
   bool empty() const { return queue.empty(); };
-  std::size_t size() const { return queue.size(); }
 
-  ExploreNode take_next() {
+  Node &take_next() {
     ExploreNode tmp{std::move(queue.front())};
     queue.pop_front();
-    return tmp;
+    return tmp.node;
   };
 
-  template <class... Args> void emplace(Args &&...args) {
-    queue.emplace_front(std::forward<Args>(args)...);
-  };
+  void emplace(Node &node) { queue.emplace_front(node); };
 };
 
 #endif // __UTILITIES__LT
