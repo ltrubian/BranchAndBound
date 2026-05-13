@@ -33,10 +33,10 @@ It is relevant to notice that:
     ./test-bench/benchmark.x --sizes 500 510 --samples 30
 
 gives as results something like (mean results of 30 runs)
-|solver|	depth |  best bound |  depth   |   best bound  |        
+|solver|depth |  best bound |  depth   |   best bound  |
 |:--:|:--:|:--:|:--:|:--:|
-|| time (ms) | time (ms) | n° nodes| n° nodes |
-|empty |	99.2 |	20.1  |		8188 |	1235    |
-|naive	| 97.7 |	21.6  |		8177 |	1235    |
-|guess	| 82 |	21.0  |		6510 |	1232    |
+| | time (ms)| time (ms) | n° nodes| n° nodes |
+|empty|99.2 |20.1  |8188 |1235 |
+|naive|97.7 |21.6  |8177 |1235 |
+|guess|82 |21.0  |6510 |1232 |
 
