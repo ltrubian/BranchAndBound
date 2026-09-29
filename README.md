@@ -11,7 +11,7 @@ ONLY for testing: [HiGHS](https://ergo-code.github.io/HiGHS/stable/)
 HiGHS is software for the definition, modification and solution of large scale sparse linear optimization models.
 HiGHS is freely available from [GitHub](https://github.com/ERGO-Code/HiGHS) under the MIT licence and has no third-party dependencies.
 
-Parallelizing the dual revised simplex method, Q. Huangfu and J. A. J. Hall, Mathematical Programming Computation, 10 (1), 119-142, 2018. DOI: [10.1007/s12532-017-0130-5](https://link.springer.com/article/10.1007/s12532-017-0130-5)
+HiGHS refers to the folowing article: Parallelizing the dual revised simplex method, Q. Huangfu and J. A. J. Hall, Mathematical Programming Computation, 10 (1), 119-142, 2018. DOI: [10.1007/s12532-017-0130-5](https://link.springer.com/article/10.1007/s12532-017-0130-5)
 
 ## Special thanks to very usefull projects
 These projects have greatly simplified the creation of benchmarks and tests, making it possible to fully focus on the correcteness and the results.
